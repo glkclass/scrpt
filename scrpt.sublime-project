@@ -1,0 +1,64 @@
+{
+	"build_systems":
+	[
+		{
+			"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+			"name": "C&CPP",
+			"path": "C:\\cygwin64\\bin;C:\\cygwin64",
+			"selector": "source.c++, source.cpp",
+			"shell_cmd": "g++.exe -g -std=c++0x  -pedantic \"${file}\" -o \"${file_path}/${file_base_name}\"",
+			"syntax": "Packages/User/Make Output.sublime-syntax",
+			"variants":
+			[
+				{
+					"name": "Run",
+					"selector": "source.c++",
+					"shell_cmd": "g++ -std=c++0x -Wall -Wextra -pedantic \"${file}\" -o \"${file_path}/${file_base_name}\" && \"${file_path}/${file_base_name}\""
+				},
+				{
+					"name": "C Build",
+					"selector": "source.c",
+					"shell_cmd": "gcc -g -pedantic \"${file}\" -o \"${file_path}/${file_base_name}\""
+				},
+				{
+					"name": "C Run",
+					"selector": "source.c",
+					"shell_cmd": "gcc -Wall -Wextra -pedantic \"${file}\" -o \"${file_path}/${file_base_name}\" && \"${file_path}/${file_base_name}\""
+				}
+			],
+			"working_dir": "${file_path}"
+		},
+		{
+			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+			"name": "Anaconda Python Builder",
+			"selector": "source.python",
+			"shell_cmd": "\"python\" -u \"$file\""
+		}
+	],
+	"folders":
+	[
+		{
+			"file_exclude_patterns":
+			[
+				"*/log/*debug*.log",
+				"*/log/CL_*.log",
+				"*/log/*.zip"
+			],
+			"folder_exclude_patterns":
+			[
+				"scrpt"
+			],
+			"path": "C:\\avv\\design\\_avv"
+		},
+		{
+			"file_exclude_patterns":
+			[
+			],
+			"folder_exclude_patterns":
+			[
+			],
+			"name": "scrpt",
+			"path": "C:\\avv\\design\\_avv\\scrpt"
+		}
+	]
+}
