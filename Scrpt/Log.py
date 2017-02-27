@@ -101,11 +101,12 @@ class Log(Scrpt_base):
 
     def job(self, mode='started', msg_args=()):
         """Print 'job' start/finish message"""
-        if 'started' == mode and 'SCRPT' not in msg_args:
-            self.indent_message(1)
-        self._print(self.log_message_patt['job'][mode] % msg_args)
-        if 'finished' == mode and 'SCRPT' not in msg_args:
+        if 'finished' == mode:
             self.indent_message(-1)
+        self._print(self.log_message_patt['job'][mode] % msg_args)
+        if 'started' == mode:
+            self.indent_message(1)
+        
 
     def cmd(self, msg):
         """Print 'cmd' message line"""

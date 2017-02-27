@@ -54,13 +54,13 @@ class File(Scrpt_base):
                 fid.close()
                 return foo
 
-    def save(self, format, data2store, path2file, severity='silent'):
+    def save(self, data2store, path2file, format='txt', mode='w', eol='\n', severity='silent'):
         self.path.exists(path2file, 'save(\'%s\' ...)' % format, severity)
-        fid = open(path2file, 'w')
+        fid = open(path2file, mode)
         data2store_list = self.path.make_list(data2store)
         for item in data2store_list:
             if 'txt' == format:
-                fid.write(str(item) + '\n')
+                fid.write(str(item) + eol)
             elif 'json' == format:
                 json.dump(item, fid, sort_keys=True, indent=4)
         fid.flush()

@@ -97,7 +97,7 @@ class Path(Scrpt_base):
         path_list = self.make_list(path)
         for path in path_list:
             self.log.info(self.log_message['remove']['folder_exists'] % path, verbosity)
-            if os.path.exists(path, self.log_message['remove']['folder_doesnt_exist'] % path, severity):
+            if self.exists(path, self.log_message['remove']['folder_doesnt_exist'] % path, severity):
                 os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 if os.path.isfile(path):
                     os.remove(path)

@@ -24,7 +24,7 @@ class Scrpt(Scrpt_base):
         else:
             self.log = Log.Log(path2log, default_settings)
         self.jobs = self.generate_job_list()  #job list
-        self.job_time_stack = {}  # to store job start/finish time
+        self.job_time_stack = {'dur': {}, 'start': {}}  # to store job start/finish time
 
         self.log.info('Scrpt strtd...')
         self.job_time_stack['SCRPT'] = self.get_time()['now']
@@ -124,8 +124,10 @@ class Scrpt(Scrpt_base):
             else:
                 self.log.fatal('Unrecognized method: %s' % job)
 
-        self.job_time_stack[job_name] = self.get_time()['now']
+        self.job_time_stack['start'][job_name] = self.get_time()['now']
         self.log.job('started', (job_name, self.get_time()['time']))
-        job_handle(*pos_args, **key_args)
-        dur = self.get_time()['now'] - self.job_time_stack[job_name]
+        retval = job_handle(*pos_args, **key_args)
+        dur = self.get_time()['now'] - self.job_time_stack['start'][job_name]
+        self.job_time_stack['dur'][job_name] = dur
         self.log.job('finished', (job_name, self.get_time()['time'], dur))
+        return retval
