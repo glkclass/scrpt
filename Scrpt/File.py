@@ -35,7 +35,7 @@ class File(Scrpt_base):
         self.log.setup(settings)
         self.path.setup(settings)
 
-    def load(self, format, path2file, strip=None, severity='silent'):
+    def load(self, path2file, format='txt', strip=None, severity='silent'):
         loader = {'json': json.load, 'yaml': yaml.load}
         if not self.path.isfile(path2file, 'load(\'%s\' ...)' % format, severity):
             return None
@@ -54,15 +54,18 @@ class File(Scrpt_base):
                 fid.close()
                 return foo
 
-    def save(self, data2store, path2file, format='txt', mode='w', eol='\n', severity='silent'):
+    def save(self, data2store, path2file, format='txt', fo_mode='w', eol='\n', severity='silent'):
         self.path.exists(path2file, 'save(\'%s\' ...)' % format, severity)
-        fid = open(path2file, mode)
-        data2store_list = self.path.make_list(data2store)
-        for item in data2store_list:
-            if 'txt' == format:
+        file_open_mode = {'w': 'w', 'a': 'a'}[fo_mode]
+        fid = open(path2file, file_open_mode)
+        if 'txt' == format:
+            if type(data2store) in (list, tuple):
+                for item in data2store:
+                    fid.write(str(item) + eol)
+            else:
                 fid.write(str(item) + eol)
-            elif 'json' == format:
-                json.dump(item, fid, sort_keys=True, indent=4)
+        elif 'json' == format:
+            json.dump(data2store, fid, sort_keys=True, indent=4)
         fid.flush()
         fid.close()
 

@@ -83,5 +83,5 @@ class Rmt(Scrpt_base):
         elif not os.path.isfile(os.environ[self.cfg['environ']['PATH2CRDNTL']]):
             self.log.message('User credentials weren\'t loaded!!!', severity)
         else:
-            self.cfg['crdntl'] = self.file.load('json', os.environ[self.cfg['environ']['PATH2CRDNTL']])
+            self.cfg['crdntl'] = self.file.load(os.environ[self.cfg['environ']['PATH2CRDNTL']], 'json')
             self.fab_init(self.cfg['crdntl']['rmt'])
