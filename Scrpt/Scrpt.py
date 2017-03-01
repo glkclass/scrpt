@@ -6,7 +6,7 @@ import types
 from Scrpt_base import Scrpt_base
 import Log
 import Util
-
+import time
 
 class Scrpt(Scrpt_base):
     """Class "Scrpt" - base class for all scripts. Contains stuff usefull for script developing/maintaining:
@@ -131,3 +131,13 @@ class Scrpt(Scrpt_base):
         self.job_time_stack['dur'][job_name] = dur
         self.log.job('finished', (job_name, self.get_time()['time'], dur))
         return retval
+
+    def sleep(self, time2sleep=None):
+        """Generate pause for 'time2sleep' seconds during execution..."""
+        tme2slp = time2sleep if time2sleep else self.cfg['time2sleep'] if 'time2sleep' in self.cfg.keys() else 0
+        if tme2slp:
+            seconds = tme2slp % 60
+            minutes = tme2slp / 60
+            hours = minutes / 60
+            self.log.info('Sleeping for %02dh:%02dm:%02ds ...' % (hours, minutes, seconds))
+            time.sleep(tme2slp)
