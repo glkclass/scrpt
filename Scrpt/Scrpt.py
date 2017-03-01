@@ -139,5 +139,7 @@ class Scrpt(Scrpt_base):
             seconds = tme2slp % 60
             minutes = tme2slp / 60
             hours = minutes / 60
+            self.log.time()
             self.log.info('Sleeping for %02dh:%02dm:%02ds ...' % (hours, minutes, seconds))
             time.sleep(tme2slp)
+            self.log.time()
