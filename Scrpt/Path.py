@@ -40,18 +40,12 @@ class Path(Scrpt_base):
                                                 }
                     }
 
-    def __init__(self, log=None, settings=None):
-        default_settings =  {
-                                'print_cmd': False,
-                            }
-        Scrpt_base.__init__(self, default_settings)
-        self.log = log if log else Log.Log(default_settings)  # use external logger if exists, else create internal logger instance
-        self.setup(settings)
+    default_settings = {'print_cmd': False}
 
-    def setup(self, settings=None):
-        """ Add/update Path and embedded unit settings"""
-        Scrpt_base.setup(self, settings)
-        self.log.setup(settings)
+    def __init__(self, log=None, user_settings=None):
+        settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
+        Scrpt_base.__init__(self, settings)
+        self.log = log if log else Log.Log(settings)  # use external logger if exists, else create internal logger instance
 
     def isfile(self, path, msg=None, severity='silent'):
         path_list = self.make_list(path)

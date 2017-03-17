@@ -9,7 +9,7 @@ class Scrpt_base(object):
         Scrpt_base.setup(self, settings)
 
     def setup(self, settings=None):
-        """ add/upda settings to config"""
+        """ add/update settings to config"""
         if settings and type(settings) is dict:
             for key in settings.keys():
                 self.cfg[key] = settings[key]
@@ -47,3 +47,8 @@ class Scrpt_base(object):
         else:
             item_list = item
         return item_list
+
+    def overwrite_settings(self, stn0, stn1):
+        for item in stn1.keys():
+            stn0[item] = stn1[item]
+        return stn0

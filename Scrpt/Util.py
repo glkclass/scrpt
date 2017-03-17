@@ -19,27 +19,20 @@ class Util(Scrpt_base):
                         'get_folder_item': 'There is no mathes',
                         'environ': {'fail': 'There is no such Env variable: %s !!!', 'success': 'Env variable: %s = %s'},
                     }
+    default_settings =  {
+                            'print_cmd': False,
+                            'shtdwn': False,
+                            'platform': platform
+                        }
 
-    def __init__(self, log=None, settings=None):
-        default_settings =  {
-                                'print_cmd': False,
-                                'shtdwn': False,
-                                'platform': platform
-                            }
-        Scrpt_base.__init__(self, default_settings)
-        self.log = log if log else Log.Log(default_settings)  # use external logger if exists, else create internal logger instance
-        self.path = Path(self.log, default_settings)
-        self.file = File(self.log, default_settings)
-        self.rmt = Rmt(self.log, self.file, default_settings)
-        self.setup(settings)  # setup/propagate settings
+    def __init__(self, log=None, user_settings=None):
+        settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
+        Scrpt_base.__init__(self, settings)
+        self.log = log if log else Log.Log(settings)  # use external logger if exists, else create internal logger instance
+        self.path = Path(self.log, settings)
+        self.file = File(self.log, settings)
+        self.rmt = Rmt(self.log, self.file, settings)
 
-    def setup(self, settings=None):
-        """ Add/update Util and embedded unit settings"""
-        Scrpt_base.setup(self, settings)
-        self.log.setup(settings)
-        self.rmt.setup(settings)
-        self.path.setup(settings)
-        self.file.setup(settings)
 
     def get_folder_item(self, dir, file_pattern, severity='silent'):
         file_pattern_list = self.make_list(file_pattern)

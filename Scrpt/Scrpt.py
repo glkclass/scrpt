@@ -12,33 +12,25 @@ class Scrpt(Scrpt_base):
     """Class "Scrpt" - base class for all scripts. Contains stuff usefull for script developing/maintaining:
     basic utils / logging&reporting / local&remote file access / etc"""
 
-    def __init__(self, path2log=None, settings=None):
-        default_settings =  {
-                                'shtdwn': False
-                            }
-        Scrpt_base.__init__(self, default_settings)
+    default_settings = {'shtdwn': False}
+
+    def __init__(self, path2log=None, user_settings=None):
+        settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
+        Scrpt_base.__init__(self, settings)
         # create Log inst
-        if 'log_basename' == path2log:
+        if 'basename' == path2log:
             log_basename = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log'
-            self.log = Log.Log(log_basename, default_settings)
+            self.log = Log.Log(log_basename, settings)
         else:
-            self.log = Log.Log(path2log, default_settings)
-        self.jobs = self.generate_job_list()  #job list
+            self.log = Log.Log(path2log, settings)
+        self.jobs = self.generate_job_list()  # job list
         self.job_time_stack = {'dur': {}, 'start': {}}  # to store job start/finish time
 
         self.log.info('Scrpt strtd...')
         self.job_time_stack['SCRPT'] = self.get_time()['now']
         self.log.job('started', ('SCRPT', self.get_time()['date_time']))
-        self.util = Util.Util(self.log, default_settings)  # create Util inst
-        self.setup(settings)  # setup/propagate settings
+        self.util = Util.Util(self.log, settings)  # create Util inst
         self.init_pc_shtdwn(5000)  # set PC 'sleep delay' if 'shutdowning'
-
-
-    def setup(self, settings=None):
-        """ Add/update Scrpt and embedded unit settings"""
-        Scrpt_base.setup(self, settings)
-        self.util.setup(settings)
-        self.log.setup(settings)
 
     def init_pc_shtdwn(self, mins):
         """Set large "PC sleep delay" when long term job scheduled with "PC shutdown" at the finish."""

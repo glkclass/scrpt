@@ -8,11 +8,11 @@ class Log(Scrpt_base):
     severity_levels = ('info', 'warning', 'error', 'fatal')
     indent = 0
     indent_str = ''
+    default_settings = {'verbosity': 1, 'print_cmd': False}
 
-    def __init__(self, path2log=None, settings=None):
-        default_settings = {'verbosity': 1, 'print_cmd': False}
-        Scrpt_base.__init__(self, default_settings)
-        self.setup(settings)
+    def __init__(self, path2log=None, user_settings=None):
+        settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
+        Scrpt_base.__init__(self, settings)
         self.log = None
         if path2log:
             self.log = open(path2log, 'w')

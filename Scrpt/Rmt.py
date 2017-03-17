@@ -20,21 +20,18 @@ class Rmt(Scrpt_base):
                         'download': '\'Rmt.download(...)\' status: %s'
                     }
 
-    def __init__(self, log=None, file=None, settings=None):
-        default_settings =  {
-                                'platform': platform,
-                                'environ': {'PATH2CRDNTL': 'AVV_CRDNTL'}
-                            }
-        Scrpt_base.__init__(self, default_settings)
-        self.log = log if log else Log.Log(default_settings)  # use external logger if exists, else create internal one
-        self.file = file if file else File.File(default_settings)  # use external file lib if exists, else create internal one
-        self.setup(settings)
-        self.load_crdntl()
+    default_settings =  {
+                            'platform': platform,
+                            'environ': {'PATH2CRDNTL': 'AVV_CRDNTL'},
+                            'rmt': 'srv1'
+                        }
 
-    def setup(self, settings=None):
-        """ Add/update Rmt and embedded unit settings"""
-        Scrpt_base.setup(self, settings)
-        self.log.setup(settings)
+    def __init__(self, log=None, file=None, user_settings=None):
+        settings = self.overwrite_settings(self.default_settings, user_settings)
+        Scrpt_base.__init__(self, settings)
+        self.log = log if log else Log.Log(settings)  # use external logger if exists, else create internal one
+        self.file = file if file else File.File(settings)  # use external file lib if exists, else create internal one
+        self.load_crdntl()
 
     def http(self):
         # response = urllib2.urlopen('link')
@@ -43,7 +40,7 @@ class Rmt(Scrpt_base):
         self.log.info(str(html))
 
     def fab_init(self, crdntl):
-        fabric.state.env['host_string'] = crdntl['user'] + '@' + crdntl['server']
+        fabric.state.env['host_string'] = crdntl['user'] + '@' + crdntl['ip']
         fabric.state.env['password'] = crdntl['pass']
         fabric.state.env['timeout'] = 10
         fabric.state.env['stdout'] = self.log.fid
@@ -84,4 +81,4 @@ class Rmt(Scrpt_base):
             self.log.message('User credentials weren\'t loaded!!!', severity)
         else:
             self.cfg['crdntl'] = self.file.load(os.environ[self.cfg['environ']['PATH2CRDNTL']], 'json')
-            self.fab_init(self.cfg['crdntl']['rmt'])
+            self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
