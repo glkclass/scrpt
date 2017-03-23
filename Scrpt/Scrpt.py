@@ -14,7 +14,7 @@ class Scrpt(Scrpt_base):
 
     default_settings = {'shtdwn': False}
 
-    def __init__(self, path2log=None, user_settings=None):
+    def __init__(self, path2log=None, user_settings={}):
         settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
         Scrpt_base.__init__(self, settings)
         # create Log inst
@@ -135,3 +135,7 @@ class Scrpt(Scrpt_base):
             self.log.info('Sleeping for %02dh:%02dm:%02ds ...' % (hours, minutes, seconds))
             time.sleep(tme2slp)
             self.log.time()
+
+    def upload_scrpt_stuff(self, src_path='C:\\avv\\design\\_avv\\scrpt\\Scrpt', dst_path='design/_avv_scrpt/_Scrpt'):
+        for item in ('__init__.py', 'File.py', 'Log.py', 'Path.py', 'Rmt.py', 'Scrpt.py', 'Scrpt_base.py', 'Util.py'):
+            self.util.rmt.upload(os.path.join(src_path, item), dst_path)

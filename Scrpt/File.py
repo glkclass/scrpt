@@ -5,6 +5,8 @@ import json
 import yaml
 import xml.etree.ElementTree
 import zipfile
+import tarfile
+import os
 
 from Scrpt_base import Scrpt_base
 from Log import Log
@@ -61,35 +63,61 @@ class File(Scrpt_base):
         fid.flush()
         fid.close()
 
-    def pack(self, path2src, path2dst_file, archivator='zip', severity='silent'):
-        """linux 'pack folder cmd' line: tar -zcvf dst_file.tzr.gx src_folder"""
+    def pack(self, path2src, dst_basename='', arch_name='zip', arch_h=None, severity='silent'):
+        arch_name = str(arch_name)
+        dst_filename = dst_basename + '.' + arch_name
         if not self.path.exists(path2src, 'pack(...)', severity):
             return None
-        log_message = self.log_message['pack'] % (path2src, path2dst_file)
-        self.log.info(log_message)
+        if dst_basename:
+            self.log.info(self.log_message['pack'] % (path2src, dst_filename))
         if self.cfg['print_cmd']:
             return
 
-        archivator = str(archivator)
-        if 'zip' == archivator:
-            if self.path.isfile(path2src, severity='silent'):
-                path2dst_file += '.%s' % archivator
-                with zipfile.ZipFile(path2dst_file, 'w') as myzip:
-                    myzip.write(path2src)
-                    myzip.close()
-            elif self.path.isdir(path2src, severity='silent'):
-                shutil.make_archive(path2dst_file, archivator, path2src)
+        if not arch_h:
+            if 'zip' == arch_name:
+                arch_h = zipfile.ZipFile(dst_filename, 'w')
+            elif 'tar' == arch_name:
+                arch_h = tarfile.open(dst_filename, "w")
+            elif 'tar.gz' == arch_name:
+                arch_h = tarfile.open(dst_filename, "w:gz")
 
-    def unpack(self, path2src_file, path2dst_folder, archivator='zip', severity='silent'):
-        if not self.path.isfile(path2src_file, 'unpack(...)', severity):
+        for item2pack in self.make_list(path2src):
+            if self.path.isfile(item2pack, severity='silent'):
+                if 'zip' == arch_name:
+                    arch_h.write(item2pack)
+                elif arch_name in ('tar', 'tar.gz'):
+                    arch_h.add(item2pack)
+            elif self.path.isdir(item2pack, severity='silent'):
+                dir_items = os.listdir(item2pack)
+                for dir_item in dir_items:
+                    dir_item2pack = os.path.join(item2pack, dir_item)
+                    if self.path.isfile(dir_item2pack, severity='silent'):
+                        if 'zip' == arch_name:
+                            arch_h.write(dir_item2pack)
+                        elif arch_name in ('tar', 'tar.gz'):
+                            arch_h.add(dir_item2pack)
+                    elif self.path.isdir(dir_item2pack, severity='silent'):
+                        self.pack(dir_item2pack, arch_name=arch_name, arch_h=arch_h)
+        if dst_basename:
+            arch_h.close()
+
+    def unpack(self, path2archive, path2dst, arch_name='zip', arch_h=None, severity='silent'):
+        if not self.path.isfile(path2archive, 'unpack(...)', severity):
             return None
-        log_message = self.log_message['unpack'] % (path2src_file, path2dst_folder)
+        log_message = self.log_message['unpack'] % (path2archive, path2dst)
         self.log.info(log_message)
         if self.cfg['print_cmd']:
             return
-        if 'zip' == str(archivator):
-            with zipfile.ZipFile(path2src_file, 'r') as myzip:
-                myzip.extractall(path2dst_folder)
+
+        if not arch_h:
+            if 'zip' == arch_name:
+                arch_h = zipfile.ZipFile(path2archive, 'r')
+            elif 'tar' == arch_name:
+                arch_h = tarfile.open(path2archive, "r")
+            elif 'tar.gz' == arch_name:
+                arch_h = tarfile.open(path2archive, "r:gz")
+        arch_h.extractall(path2dst)
+        arch_h.close()
 
     def remove_patt(self, path_2_txt, pattern_2_remove, severity='silent'):
         lines_in = self.load('txt', path_2_txt, severity=severity)

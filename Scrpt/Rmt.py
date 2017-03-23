@@ -1,9 +1,7 @@
 from sys import platform
 import os
-# import fabric
-if 'win32' == platform:
-    import fabric.api
-    import fabric.operations
+import fabric.api
+import fabric.operations
 
 
 import urllib2
@@ -23,7 +21,7 @@ class Rmt(Scrpt_base):
     default_settings =  {
                             'platform': platform,
                             'environ': {'PATH2CRDNTL': 'AVV_CRDNTL'},
-                            'rmt': 'srv1'
+                            'rmt': 'srv_34'
                         }
 
     def __init__(self, log=None, file=None, user_settings=None):
@@ -47,6 +45,7 @@ class Rmt(Scrpt_base):
 
     def cmd(self, cmd, path='.'):
         """Login remote server via ssh and run cmd remotely"""
+        self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
         with fabric.api.cd(path):
             if self.log.exists():
                 fabric.api.run(cmd, stdout=self.log.fid, stderr=self.log.fid)
@@ -55,6 +54,7 @@ class Rmt(Scrpt_base):
 
     def upload(self, localpath, remotepath, verbosity=0):
         """Upload <single file/group of files> to remote host via sftp"""
+        self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
         localpath_list = self.make_list(localpath)
         ans = []
         for item in localpath_list:
@@ -64,6 +64,7 @@ class Rmt(Scrpt_base):
 
     def download(self, remotepath='.', localpath='.', verbosity=0):
         """Download <single file/group of files> from remote host via sftp"""
+        self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
         remotepath_list = self.make_list(remotepath)
         ans = []
         for item in remotepath_list:
@@ -81,4 +82,3 @@ class Rmt(Scrpt_base):
             self.log.message('User credentials weren\'t loaded!!!', severity)
         else:
             self.cfg['crdntl'] = self.file.load(os.environ[self.cfg['environ']['PATH2CRDNTL']], 'json')
-            self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
