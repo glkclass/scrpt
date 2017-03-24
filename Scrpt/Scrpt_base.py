@@ -24,9 +24,9 @@ class Scrpt_base(object):
         now = datetime.datetime.now().replace(microsecond=0)
         foo['now'] = now
 
-        foo['month'] = month[now.month]
-        foo['week_num'] = datetime.date(now.year, now.month, now.day).isocalendar()[1]
-        foo['week_day'] = weekday[datetime.date(now.year, now.month, now.day).weekday()]
+        foo['month'] = month[foo['now'].month]
+        foo['week_num'] = foo['now'].weekday()
+        foo['week_day'] = weekday[foo['now'].weekday()]
 
         foo['time'] = '%02d:%02d:%02d' % (now.hour, now.minute, now.second)
         foo['date'] = '%04d/%02d/%02d' % (now.year, now.month, now.day)
