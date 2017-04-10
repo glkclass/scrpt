@@ -3,6 +3,7 @@ import os.path
 import os
 import shutil
 import stat
+import logging
 
 from Scrpt_base import Scrpt_base
 from Log import Log
@@ -23,8 +24,8 @@ class Path(Scrpt_base):
                                     },
 
                         'remove':   {
-                                        'folder_exists': 'Removing %s ...',
-                                        'folder_doesnt_exist': 'The folder \'%s\' doesn\'t exist!',
+                                        'item_exists': 'Removing %s ...',
+                                        'item_doesnt_exist': 'The folder \'%s\' doesn\'t exist!',
                                     },
                         'copy_dir_content': {
                                                 'src_folder_exists': 'Copying folder content \'%s\' -> \'%s\' ...',
@@ -43,89 +44,92 @@ class Path(Scrpt_base):
     default_settings = {'print_cmd': False}
 
     def __init__(self, log=None, user_settings=None):
-        settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
-        Scrpt_base.__init__(self, settings)
-        self.log = log if log else Log.Log(settings)  # use external logger if exists, else create internal logger instance
+        Scrpt_base.__init__(self, self.default_settings)
+        self.update_settings(user_settings)
 
-    def isfile(self, path, msg=None, severity='silent'):
+        if log:
+            self.log = log  # use external logger if exists
+        else:
+            # create own Logger
+            logging.setLoggerClass(Log.Log)
+            self.log = logging.getLogger(__name__)
+
+    def isfile(self, path, msg=None, verbosity=20):
         path_list = self.make_list(path)
         for path in path_list:
             if not os.path.isfile(path):
-                log_message = '%s -> %s' % (msg, self.log_message['isfile'] % path) if msg else self.log_message['isfile'] % path
-                self.log.message(log_message, severity)
+                self.log.log(verbosity, self.log_message['isfile'] % path)
                 return False
             else:
                 return True
 
-    def isdir(self, path, msg=None, severity='silent'):
+    def isdir(self, path, verbosity=20):
         path_list = self.make_list(path)
         for path in path_list:
             if not os.path.isdir(path):
-                log_message = '%s -> %s' % (msg, self.log_message['isdir'] % path) if msg else self.log_message['isdir'] % path
-                self.log.message(log_message, severity)
+                self.log.log(verbosity, self.log_message['isdir'] % path)
                 return False
             else:
                 return True
 
-    def exists(self, path, msg=None, severity='silent'):
+    def exists(self, path, verbosity=20):
         path_list = self.make_list(path)
         for path in path_list:
             if not os.path.exists(path):
-                log_message = '%s -> %s' % (msg, self.log_message['exists'] % path) if msg else self.log_message['exists'] % path
-                self.log.message(log_message, severity)
+                self.log.log(verbosity, self.log_message['exists'] % path)
                 return False
             else:
                 return True
 
-    def mkdir(self, path, msg=None, severity='silent', verbosity=1):
+    def mkdir(self, path, verbosity=20):
         if not os.path.exists(path):
             os.makedirs(path)
-            self.log.info(self.log_message['mkdir']['folder_doesnt_exists'] % path, verbosity)
+            self.log.log(verbosity, self.log_message['mkdir']['folder_doesnt_exist'] % path)
         else:
             if os.path.isfile(path):
-                self.log.message(self.log_message['mkdir']['file_exists'] % path, 'fail')
+                self.log.log(verbosity, self.log_message['mkdir']['file_exists'] % path)
             else:
-                self.log.info(self.log_message['mkdir']['folder_exists'] % path, verbosity)
+                self.log.log(verbosity, self.log_message['mkdir']['folder_exists'] % path)
 
-    def remove(self, path, severity='silent', verbosity=1):
+    def remove(self, path, verbosity=20):
         path_list = self.make_list(path)
         for path in path_list:
-            self.log.info(self.log_message['remove']['folder_exists'] % path, verbosity)
-            if self.exists(path, self.log_message['remove']['folder_doesnt_exist'] % path, severity):
+            self.log.log(verbosity, self.log_message['remove']['item_exists'] % path)
+            if self.exists(path):
                 os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 if os.path.isfile(path):
                     os.remove(path)
                 elif self.isdir(path):
                     shutil.rmtree(path)
 
-    def copy_dir_content(self, src, dst, items=None, severity='error', verbosity=1):
-        if not self.isdir(src, self.log_message['copy_dir_content']['src_folder_doesnt_exist'] % src, severity):
+    def copy_dir_content(self, src, dst, items=None, verbosity=20):
+        if not self.isdir(src, verbosity):
             return
         if self.cfg['print_cmd']:
             return
         if not self.isdir(dst):
             self.mkdir(dst, verbosity=0)
-            self.log.info(self.log_message['copy_dir_content']['dst_folder_doesnt_exist'] % dst, verbosity)
-        self.log.info(self.log_message['copy_dir_content']['src_folder_exists'] % (src, dst), verbosity)
+            self.log.log(verbosity, self.log_message['copy_dir_content']['dst_folder_doesnt_exist'] % dst)
+        self.log.log(verbosity, self.log_message['copy_dir_content']['src_folder_exists'] % (src, dst))
         src_dir_item = self.make_list(items) if items is not None else os.listdir(src)
         for item in src_dir_item:
             src_item = os.path.join(src, item)
-            self.log.info(self.log_message['copy_dir_content']['src_item_exists'] % (src_item, dst), verbosity)
+            self.log.log(verbosity, self.log_message['copy_dir_content']['src_item_exists'] % (src_item, dst))
             if os.path.isfile(src_item):
                 shutil.copy(src_item, dst)
             elif self.isdir(src_item):
                 shutil.copytree(src_item, os.path.join(dst, item))
 
-    def remove_dir_content(self, path, severity='silent', verbosity=1):
-        if not self.isdir(path, self.log_message['remove_dir_content']['folder_doesnt_exist'] % path, severity):
+    def remove_dir_content(self, path, verbosity=20):
+        if not self.isdir(path):
             return
-        self.log.info(self.log_message['remove_dir_content']['folder_exists'] % path, verbosity)
+        self.log.log(verbosity, self.log_message['remove_dir_content']['folder_exists'] % path)
         if self.cfg['print_cmd']:
             return
         dir_item_list = os.listdir(path)
         for item in dir_item_list:
             path_item = os.path.join(path, item)
-            self.log.info(self.log_message['remove_dir_content']['item_exists'] % path_item, verbosity)
+            self.log.log(verbosity, self.log_message['remove_dir_content']['item_exists'] % path_item)
             if os.path.isfile(path_item):
                 os.remove(path_item)
             elif self.isdir(path_item):

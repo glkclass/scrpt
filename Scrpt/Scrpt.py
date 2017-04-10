@@ -4,9 +4,11 @@ import argparse
 import inspect
 import types
 from Scrpt_base import Scrpt_base
+import logging
 import Log
 import Util
 import time
+
 
 class Scrpt(Scrpt_base):
     """Class "Scrpt" - base class for all scripts. Contains stuff usefull for script developing/maintaining:
@@ -15,21 +17,18 @@ class Scrpt(Scrpt_base):
     default_settings = {'shtdwn': False}
 
     def __init__(self, path2log=None, user_settings={}):
-        settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
-        Scrpt_base.__init__(self, settings)
-        # create Log inst
-        if 'basename' == path2log:
-            log_basename = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log'
-            self.log = Log.Log(log_basename, settings)
-        else:
-            self.log = Log.Log(path2log, settings)
-        self.jobs = self.generate_job_list()  # job list
-        self.job_time_stack = {'dur': {}, 'start': {}}  # to store job start/finish time
+        Scrpt_base.__init__(self, self.default_settings)
+        self.update_settings(user_settings)
 
-        self.log.info('Scrpt strtd...')
-        self.job_time_stack['SCRPT'] = self.get_time()['now']
-        self.log.job('started', ('SCRPT', self.get_time()['date_time']))
-        self.util = Util.Util(self.log, settings)  # create Util inst
+        # create Logger
+        logging.setLoggerClass(Log.Log)
+        self.log = logging.getLogger(__name__)
+        path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == path2log else path2log
+        self.log.add_handler(path2log)
+
+        self.jobs = self.generate_job_list()  # job list
+        self.log.job('started', 'SCRPT')
+        self.util = Util.Util(self.log, self.cfg)  # create Util inst
         self.init_pc_shtdwn(5000)  # set PC 'sleep delay' if 'shutdowning'
 
     def init_pc_shtdwn(self, mins):
@@ -46,11 +45,11 @@ class Scrpt(Scrpt_base):
 
     def finish(self):
         """Finalize Scrpt: write final message/close files/turn off PC/..."""
-        dur = self.get_time()['now'] - self.job_time_stack['SCRPT']
-        self.log.job('finished', ('SCRPT', self.get_time()['date_time'], dur))
-        self.log.info('Scrpt fnshd!',)
-        self.pc_shutdown('/h')
+        self.log.job('finished', 'SCRPT')
+        self.log.info('SCRPT fnshd.')
+
         self.log.close()
+        self.pc_shutdown('/h')
 
     def parse_args(self, args2parse):
         """Parse input arguments if script should be calling with input args."""
@@ -116,12 +115,9 @@ class Scrpt(Scrpt_base):
             else:
                 self.log.fatal('Unrecognized method: %s' % job)
 
-        self.job_time_stack['start'][job_name] = self.get_time()['now']
-        self.log.job('started', (job_name, self.get_time()['time']))
+        self.log.job('started', job_name)
         retval = job_handle(*pos_args, **key_args)
-        dur = self.get_time()['now'] - self.job_time_stack['start'][job_name]
-        self.job_time_stack['dur'][job_name] = dur
-        self.log.job('finished', (job_name, self.get_time()['time'], dur))
+        self.log.job('finished', job_name)
         return retval
 
     def sleep(self, time2sleep=None):

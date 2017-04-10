@@ -1,117 +1,135 @@
 import sys
-
+import logging
 from Scrpt_base import Scrpt_base
 
+Logger = logging.getLoggerClass()
 
-class Log(Scrpt_base):
-    """Class "Log" - implements all logging&reporting operations. To be embedded in others classes requiring such functionality."""
-    severity_levels = ('info', 'warning', 'error', 'fatal')
-    indent = 0
-    indent_str = ''
-    default_settings = {'verbosity': 1, 'print_cmd': False}
 
-    def __init__(self, path2log=None, user_settings=None):
-        settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
-        Scrpt_base.__init__(self, settings)
-        self.log = None
-        if path2log:
-            self.log = open(path2log, 'w')
-            self.le = '\n'  # NewLine for txt log
-        else:
-            self.le = ''  # No NewLine for console log
+class Log(Logger, Scrpt_base):
+    """Class "Log" - inherits standard python logging.Logger class and adds some custom functionality."""
+    NOTSET = logging.NOTSET
+    DEBUG = logging.DEBUG
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    ERROR = logging.ERROR
+    FATAL = logging.CRITICAL
+    log_level = [DEBUG, INFO, WARNING, ERROR, FATAL]
 
+    msg_frmt =  {
+                    'debug':    '%(indent)s[DBG] : %(message)s',
+                    'info':     '%(indent)s[INF] : %(message)s',
+                    'warning':  '%(indent)s[WAR] : %(message)s',
+                    'error':    '%(indent)s[ERR] : %(message)s',
+                    'fatal':    '%(indent)s[FTL] : %(stack_info)s : %(message)s',
+                    'log':      '%(indent)s[LOG] : %(message)s',
+                    'time':     '%(indent)s[TME] : %(asctime)s : %(message)s',
+                    'cmd':      '%(indent)s[CMD] : %(message)s : [TME] : %(asctime)s',
+                    'job':
+                        {
+                    'started':  '%(indent)s[JOB] : %(message)s : [TME] : %(asctime)s',
+                    'finished': '%(indent)s[JOB] : %(message)s : [TME] : %(asctime)s : [DUR] : %(dur)s'
+                        }
+                }
+    datetimefmt = '%Y/%m/%d %H:%M:%S'
+    timefmt = '%H:%M:%S'
+
+    extra = {'indent': ''}
+    default_settings = {'print_cmd': False, }
+
+    def __init__(self, name):
+        Scrpt_base.__init__(self, self.default_settings)
+        Logger.__init__(self, name)
+        self.setLevel(self.INFO)
+        self.job_time_stack = {'start': {}}  # to store job start/finish time
         self.indent_message(0)
 
-        self.time_stack = {}
+    def add_handler(self, path2log):
+        if path2log:
+            self.hdlr = logging.FileHandler(path2log, mode='w')
+        else:
+            self.hdlr = logging.StreamHandler()
+        self.addHandler(self.hdlr)
 
     def indent_message(self, indent_val):
         self.indent = indent_val if 0 == indent_val else self.indent + indent_val
-        self.indent_str = self.indent * '\t'
+        self.extra['indent'] = self.indent * '\t'
 
-        self.log_message_patt =     {
-                                        'base': self.indent_str + '[%s] : %s' + self.le,
-                                        'time': self.indent_str + '[TME] : %s' + self.le,
-                                        'info': self.indent_str + '[INF] : %s' + self.le,
-                                        'warning': self.indent_str + '[WAR] : %s' + self.le,
-                                        'error': self.indent_str + '[ERR] : %s' + self.le,
-                                        'fatal': self.indent_str + '[FTL] : %s' + self.le,
-                                        'job':  {
-                                                    'started': self.indent_str + '[JOB] : %s : [TME] : %s' + self.le,
-                                                    'finished': self.indent_str + '[JOB] : %s : [TME] : %s : [DUR] : %s' + self.le,
-                                                },
-                                        'cmd': self.indent_str + '[CMD] : %s : [TME] %s' + self.le,
-                                    }
-
-    def close(self):
-        """Close log if opened"""
-        if self.log:
-            self.log.close()
-            self.log = None
-
-    def _print(self, line):
-        """Print message to log file or stdout"""
-        if self.log:
-            self.log.write(line)
-            self.log.flush()
-        else:
-            print line
-
-    def info(self, msg='', verbosity=0):
+    def log(self, lvl, msg, *args, **kwargs):
         """Print 'Info' message"""
-        if verbosity < self.cfg['verbosity']:
-            self._print(self.log_message_patt['info'] % msg)
+        if lvl in self.log_level:
+            self.log_func[lvl](self, msg, extra=self.extra)
+        else:
+            self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['log'], datefmt=self.timefmt))
+            kwargs['extra'] = self.extra
+            Logger.log(self, lvl, msg, *args, **kwargs)
 
-    def warning(self, msg=''):
+    def debug(self, msg, *args, **kwargs):
+        """Print 'Info' message"""
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['debug']))
+        kwargs['extra'] = self.extra
+        Logger.debug(self, msg, *args, **kwargs)
+
+    def info(self, msg, *args, **kwargs):
+        """Print 'Info' message"""
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['info']))
+        kwargs['extra'] = self.extra
+        Logger.info(self, msg, *args, **kwargs)
+
+    def warning(self, msg, *args, **kwargs):
         """Print 'Warning' message"""
-        self._print(self.log_message_patt['warning'] % msg)
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['warning']))
+        kwargs['extra'] = self.extra
+        Logger.warning(self, msg, *args, **kwargs)
 
-    def error(self, msg=''):
+    def error(self, msg, *args, **kwargs):
         """Print 'Error' message"""
-        self._print(self.log_message_patt['error'] % msg)
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['error']))
+        kwargs['extra'] = self.extra
+        Logger.error(self, msg, *args, **kwargs)
 
-    def fatal(self, msg=''):
+    def fatal(self, msg, *args, **kwargs):
         """Print 'Fatal' message and terminate Scrpt execution."""
-        self._print(self.log_message_patt['fatal'] % msg)
-
-        if self.exists():
-            self._print(self.log_message_patt['fatal'] % 'Scrpt has been terminated due to \'Fatal exception\' encountered!!!')
-
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['fatal']))
+        kwargs['extra'] = self.extra
+        Logger.critical(self, msg, *args, **kwargs)
+        Logger.critical(self, 'Scrpt has been terminated due to \'Fatal exception\' encountered!!!', *args, **kwargs)
         if self.cfg['print_cmd'] is False:
             self.close()
             sys.exit('Scrpt has been terminated due to \'Fatal exception\' encountered (see \'*.log\' for details)!!!')
 
-    def message(self, msg, severity='info'):
-        """Print message which type is defined by input param"""
-        if 'info' == severity:
-            self.info(msg)
-        elif 'warning' == severity:
-            self.warning(msg)
-        elif 'error' == severity:
-            self.error(msg)
-        elif 'fatal' == severity:
-            self.fatal(msg)
-        elif 'silent' == severity:
-            pass
-        else:
-            self.error('Wrong log.message severity level: \'%s\' !!!' % severity)
+    def critical(self, msg, *args, **kwargs):
+        """Print 'Critial' message."""
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['fatal']))
+        kwargs['extra'] = self.extra
+        Logger.critical(self, msg, *args, **kwargs)
 
-    def time(self, mode='time'):
-        """Print time message line"""
-        self._print(self.log_message_patt['time'] % self.get_time()[mode])
+    def time(self, msg='', lvl=INFO):
+        """Print time"""
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['time'], datefmt=self.timefmt))
+        Logger.log(self, lvl, msg, extra=self.extra)
 
-    def job(self, mode='started', msg_args=()):
+    def job(self, mode='started', name='', lvl=INFO):
         """Print 'job' start/finish message"""
-        if 'finished' == mode:
+        if mode == 'started':
+            self.job_time_stack['start'][name] = self.get_time()['now']
+        elif mode == 'finished':
+            self.extra['dur'] = self.get_time()['now'] - self.job_time_stack['start'][name]
             self.indent_message(-1)
-        self._print(self.log_message_patt['job'][mode] % msg_args)
-        if 'started' == mode:
-            self.indent_message(1)
-        
 
-    def cmd(self, msg):
-        """Print 'cmd' message line"""
-        tme = self.get_time()['time']
-        self._print(self.log_message_patt['cmd'] % (msg, tme))
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['job'][mode], datefmt=self.datetimefmt if 'SCRPT' == name else self.timefmt))
+        Logger.log(self, lvl, name, extra=self.extra)
+
+        if mode == 'started':
+            self.indent_message(1)
+
+    def cmd(self, msg='', lvl=INFO):
+        """Print 'cmd' + 'time'"""
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['cmd'], datefmt=self.timefmt))
+        Logger.log(self, lvl, msg, extra=self.extra)
+
+    def close(self):
+        """Close log if opened"""
+        logging.shutdown()
 
     def settings(self, cfg=None, msg=""):
         """Print given 'unit' settings"""
@@ -122,14 +140,7 @@ class Log(Scrpt_base):
             for setting in cfg.keys():
                 self.info("\t%s = %s" % (setting, cfg[setting]))
         else:
-            self.info('\tEmpty!')
+            self.info('\tEmpty settings!')
 
-    def exists(self):
-        """Check log file existence"""
-        foo = True if self.log else False
-        return foo
-
-    def fid(self):
-        """Return log file 'id' if exists"""
-        foo = self.log if self.exists() else None
-        return foo
+    log_func_name = [debug, info, warning, error, fatal]
+    log_func = dict(zip(log_level, log_func_name))

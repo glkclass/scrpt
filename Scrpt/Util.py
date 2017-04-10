@@ -3,6 +3,7 @@ import os.path
 import os
 import re
 import subprocess
+import logging
 
 from Scrpt_base import Scrpt_base
 from Log import Log
@@ -26,15 +27,21 @@ class Util(Scrpt_base):
                         }
 
     def __init__(self, log=None, user_settings=None):
-        settings = self.overwrite_settings(self.default_settings, user_settings)  # propagate settings
-        Scrpt_base.__init__(self, settings)
-        self.log = log if log else Log.Log(settings)  # use external logger if exists, else create internal logger instance
-        self.path = Path(self.log, settings)
-        self.file = File(self.log, settings)
-        self.rmt = Rmt(self.log, self.file, settings)
+        Scrpt_base.__init__(self, self.default_settings)
+        self.update_settings(user_settings)
 
+        if log:
+            self.log = log  # use external logger if exists
+        else:
+            # create own Logger
+            logging.setLoggerClass(Log.Log)
+            self.log = logging.getLogger(__name__)
 
-    def get_folder_item(self, dir, file_pattern, severity='silent'):
+        self.path = Path(self.log, self.cfg)
+        self.file = File(self.log, self.cfg)
+        self.rmt = Rmt(self.log, self.file, self.cfg)
+
+    def get_folder_item(self, dir, file_pattern, verbosity=20):
         file_pattern_list = self.make_list(file_pattern)
         found_patt = []
         dir_item = os.listdir(dir)
@@ -46,7 +53,7 @@ class Util(Scrpt_base):
                     break
 
         if not found_patt:
-            self.log.message(self.log_message['get_folder_item'], severity)
+            self.log.log(verbosity, self.log_message['get_folder_item'])
             found_patt.append('No matches!')
 
         return found_patt
@@ -85,21 +92,20 @@ class Util(Scrpt_base):
                 return False
         return True
 
-    def subprocess_call(self, cmd, verbosity=1, shl=True):
+    def subprocess_call(self, cmd, verbosity=20, shl=True):
         """Execute external command."""
         cmd_list = self.make_list(cmd)
         for cmd in cmd_list:
-            self.log.cmd(cmd)
-            if 'shutdown' in cmd and not self.cfg['print_cmd']:  # close log file if command='shutdown ...' and 'print_cmd' mode isn't enabled
-                self.log.close()
+            self.log.cmd(cmd, verbosity)
             if self.cfg['print_cmd']:
                 continue
-            if self.log.log:
-                subprocess.call(cmd, shell=shl, stdout=self.log.log, stderr=self.log.log)
-            else:
+            if 'shutdown' in cmd:  # close log file if command='shutdown ...'
+                self.log.close()
                 subprocess.call(cmd, shell=shl)
+            else:
+                subprocess.call(cmd, shell=shl, stdout=self.log.hdlr, stderr=self.log.hdlr)
 
-    def environ(self, name_value, verbosity=1, severity='silent'):
+    def environ(self, name_value, verbosity=50):
         """ Set/read environment variable.
             Use cases:
             environ('ENVAR_NAME=ENVAR_VALUE', verbosity=True)
@@ -117,14 +123,14 @@ class Util(Scrpt_base):
                 os.environ[envar_name] = envar_value if envar_name not in os.environ.keys() else os.environ[envar_name] + os.pathsep + envar_value
             else:
                 os.environ[envar_name] = envar_value
-            self.log.info(self.log_message['environ']['success'] % (envar_name, os.environ[envar_name]), verbosity)
+            self.log.info(self.log_message['environ']['success'] % (envar_name, os.environ[envar_name]))
         else:  # read env var
             envar_name = name_value
             if envar_name not in os.environ.keys():
-                self.log.message(self.log_message['environ']['fail'] % envar_name, severity)
+                self.log.log(verbosity, self.log_message['environ']['fail'] % envar_name)
                 return None
             else:
-                self.log.info(self.log_message['environ']['success'] % (envar_name, os.environ[envar_name]), verbosity)
+                self.log.info(self.log_message['environ']['success'] % (envar_name, os.environ[envar_name]))
 
         return os.environ[envar_name]
 

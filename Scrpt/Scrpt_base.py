@@ -6,13 +6,11 @@ class Scrpt_base(object):
 
     def __init__(self, settings=None):
         self.cfg = {}  # config, contain basic settings
-        Scrpt_base.setup(self, settings)
+        Scrpt_base.update_settings(self, settings)
 
-    def setup(self, settings=None):
-        """ add/update settings to config"""
-        if settings and type(settings) is dict:
-            for key in settings.keys():
-                self.cfg[key] = settings[key]
+    def update_settings(self, stn):
+        for item in stn.keys():
+            self.cfg[item] = stn[item]
 
     def get_time(self):
         """ Get system date/time in different formats"""
@@ -47,8 +45,3 @@ class Scrpt_base(object):
         else:
             item_list = item
         return item_list
-
-    def overwrite_settings(self, stn0, stn1):
-        for item in stn1.keys():
-            stn0[item] = stn1[item]
-        return stn0
