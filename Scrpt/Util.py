@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import logging
+import sys
 
 from Scrpt_base import Scrpt_base
 from Log import Log
@@ -103,7 +104,8 @@ class Util(Scrpt_base):
                 self.log.close()
                 subprocess.call(cmd, shell=shl)
             else:
-                subprocess.call(cmd, shell=shl, stdout=self.log.hdlr, stderr=self.log.hdlr)
+                # subprocess.call(cmd, shell=shl, stdout=sys.stdout, stderr=sys.stderr)
+                subprocess.call(cmd, shell=shl)
 
     def environ(self, name_value, verbosity=50):
         """ Set/read environment variable.

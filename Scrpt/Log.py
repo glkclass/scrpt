@@ -1,6 +1,7 @@
 import sys
 import logging
 from Scrpt_base import Scrpt_base
+from Stream2Logger import Stream2Logger
 
 Logger = logging.getLoggerClass()
 
@@ -16,6 +17,8 @@ class Log(Logger, Scrpt_base):
     log_level = [DEBUG, INFO, WARNING, ERROR, FATAL]
 
     msg_frmt =  {
+                    'stdout':   '%(indent)s[SDO] : %(message)s',
+                    'stderr':   '%(indent)s[SDR] : %(message)s',
                     'debug':    '%(indent)s[DBG] : %(message)s',
                     'info':     '%(indent)s[INF] : %(message)s',
                     'warning':  '%(indent)s[WAR] : %(message)s',
@@ -42,6 +45,9 @@ class Log(Logger, Scrpt_base):
         self.setLevel(self.INFO)
         self.job_time_stack = {'start': {}}  # to store job start/finish time
         self.indent_message(0)
+        sys.stdout = Stream2Logger('stdout', self, self.INFO)
+        # sys.stderr = Stream2Logger('stderr', self, self.ERROR)
+
 
     def add_handler(self, path2log):
         if path2log:
@@ -49,17 +55,24 @@ class Log(Logger, Scrpt_base):
         else:
             self.hdlr = logging.StreamHandler()
         self.addHandler(self.hdlr)
+        # sys.stdout = self.hdlr
 
     def indent_message(self, indent_val):
         self.indent = indent_val if 0 == indent_val else self.indent + indent_val
         self.extra['indent'] = self.indent * '\t'
 
+    def std(self, stdtype, lvl, msg):
+        """Print messages from 'STDOUT/ERR'"""
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt[stdtype]))
+        Logger.log(self, lvl, msg, extra=self.extra)
+
     def log(self, lvl, msg, *args, **kwargs):
         """Print 'Info' message"""
         if lvl in self.log_level:
-            self.log_func[lvl](self, msg, extra=self.extra)
+            kwargs['extra'] = self.extra
+            self.log_func[lvl](self, msg, *args, kwargs)
         else:
-            self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['log'], datefmt=self.timefmt))
+            self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['log']))
             kwargs['extra'] = self.extra
             Logger.log(self, lvl, msg, *args, **kwargs)
 

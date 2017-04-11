@@ -133,5 +133,5 @@ class Scrpt(Scrpt_base):
             self.log.time()
 
     def upload_scrpt_stuff(self, src_path='C:\\avv\\design\\_avv\\scrpt\\Scrpt', dst_path='design/_avv_scrpt/_Scrpt'):
-        for item in ('__init__.py', 'File.py', 'Log.py', 'Path.py', 'Rmt.py', 'Scrpt.py', 'Scrpt_base.py', 'Util.py'):
+        for item in ('__init__.py', 'File.py', 'Log.py','Stream2Logger.py', 'Path.py', 'Rmt.py', 'Scrpt.py', 'Scrpt_base.py', 'Util.py'):
             self.util.rmt.upload(os.path.join(src_path, item), dst_path)
