@@ -33,7 +33,7 @@ class Rmt(Scrpt_base):
             # create own Logger
             logging.setLoggerClass(Log.Log)
             self.log = logging.getLogger(__name__)
-        self.file = file if file else File.File(settings)  # use external file lib if exists, else create internal one
+        self.file = file if file else File.File(self.settings)  # use external file lib if exists, else create internal one
         self.load_crdntl()
 
     def http(self):

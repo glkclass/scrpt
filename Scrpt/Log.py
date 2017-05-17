@@ -17,20 +17,22 @@ class Log(Logger, Scrpt_base):
     log_level = [DEBUG, INFO, WARNING, ERROR, FATAL]
 
     msg_frmt =  {
-                    'stdout':   '%(indent)s[SDO] : %(message)s',
-                    'stderr':   '%(indent)s[SDR] : %(message)s',
-                    'debug':    '%(indent)s[DBG] : %(message)s',
-                    'info':     '%(indent)s[INF] : %(message)s',
-                    'warning':  '%(indent)s[WAR] : %(message)s',
-                    'error':    '%(indent)s[ERR] : %(message)s',
-                    'fatal':    '%(indent)s[FTL] : %(stack_info)s : %(message)s',
-                    'log':      '%(indent)s[LOG] : %(message)s',
-                    'time':     '%(indent)s[TME] : %(asctime)s : %(message)s',
-                    'cmd':      '%(indent)s[CMD] : %(message)s : [TME] : %(asctime)s',
+                    'stdout':       '%(indent)s[SDO] : %(message)s',
+                    'stderr':       '%(indent)s[SDR] : %(message)s',
+                    'debug':        '%(indent)s[DBG] : %(message)s',
+                    'info':         '%(indent)s[INF] : %(message)s',
+                    'warning':      '%(indent)s[WAR] : %(message)s',
+                    'error':        '%(indent)s[ERR] : %(message)s',
+                    # 'fatal':        '%(indent)s[FTL] : %(stack_info)s : %(message)s',
+                    'fatal':        '%(indent)s[FTL] : %(message)s',
+                    'log':          '%(indent)s[LOG] : %(message)s',
+                    'time':         '%(indent)s[TME] : %(message)s : %(asctime)s',
+                    'time_delta':   '%(indent)s[TME] : %(message)s : %(asctime)s : [DLT] : %(delta)s',
+                    'cmd':          '%(indent)s[CMD] : %(message)s : [TME] : %(asctime)s',
                     'job':
                         {
-                    'started':  '%(indent)s[JOB] : %(message)s : [TME] : %(asctime)s',
-                    'finished': '%(indent)s[JOB] : %(message)s : [TME] : %(asctime)s : [DUR] : %(dur)s'
+                    'started':      '%(indent)s[JOB] : %(message)s : [TME] : %(asctime)s',
+                    'finished':     '%(indent)s[JOB] : %(message)s : [TME] : %(asctime)s : [DUR] : %(dur)s'
                         }
                 }
     datetimefmt = '%Y/%m/%d %H:%M:%S'
@@ -43,11 +45,10 @@ class Log(Logger, Scrpt_base):
         Scrpt_base.__init__(self, self.default_settings)
         Logger.__init__(self, name)
         self.setLevel(self.INFO)
-        self.job_time_stack = {'start': {}}  # to store job start/finish time
+        self.job_time_stack = {'start': {}, 'time_delta': self.get_time()['now']}  # to store job start/finish time, delta times, ...
         self.indent_message(0)
         sys.stdout = Stream2Logger('stdout', self, self.INFO)
         # sys.stderr = Stream2Logger('stderr', self, self.ERROR)
-
 
     def add_handler(self, path2log):
         if path2log:
@@ -69,8 +70,9 @@ class Log(Logger, Scrpt_base):
     def log(self, lvl, msg, *args, **kwargs):
         """Print 'Info' message"""
         if lvl in self.log_level:
+            self.extra['stack_info'] = None
             kwargs['extra'] = self.extra
-            self.log_func[lvl](self, msg, *args, kwargs)
+            self.log_func[lvl](self, msg, *args, **kwargs)
         else:
             self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['log']))
             kwargs['extra'] = self.extra
@@ -119,6 +121,13 @@ class Log(Logger, Scrpt_base):
     def time(self, msg='', lvl=INFO):
         """Print time"""
         self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['time'], datefmt=self.timefmt))
+        Logger.log(self, lvl, msg, extra=self.extra)
+
+    def time_delta(self, msg='', lvl=INFO):
+        """Print time delta between two calls"""
+        self.extra['delta'] = self.get_time()['now'] - self.job_time_stack['time_delta']
+        self.job_time_stack['time_delta'] = self.get_time()['now']
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['time_delta'], datefmt=self.timefmt))
         Logger.log(self, lvl, msg, extra=self.extra)
 
     def job(self, mode='started', name='', lvl=INFO):

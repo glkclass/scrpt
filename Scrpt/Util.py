@@ -5,6 +5,7 @@ import re
 import subprocess
 import logging
 import sys
+import matplotlib.pyplot as plt
 
 from Scrpt_base import Scrpt_base
 from Log import Log
@@ -16,6 +17,8 @@ from File import File
 class Util(Scrpt_base):
     """Class 'Util' - contains basic utils (may be embedded in appropriate classes).
     To be embedded in others classes requiring such functionality."""
+
+    # plt = matplotlib.pyplot
 
     log_message =   {
                         'get_folder_item': 'There is no mathes',
@@ -107,7 +110,7 @@ class Util(Scrpt_base):
                 # subprocess.call(cmd, shell=shl, stdout=sys.stdout, stderr=sys.stderr)
                 subprocess.call(cmd, shell=shl)
 
-    def environ(self, name_value, verbosity=50):
+    def environ(self, name_value, verbosity=40):
         """ Set/read environment variable.
             Use cases:
             environ('ENVAR_NAME=ENVAR_VALUE', verbosity=True)
@@ -175,4 +178,26 @@ class Util(Scrpt_base):
                 self.log.error('Wrong \'allign\' value')
                 return 'Wrong \'allign\' value'
 
-        # TODO: port av.artefacts
+    user_plots = ('plot_0', 'plot_0_blocked')
+
+    def plt(self, func, *args, **kwargs):
+        """Proxy to call matplotlib.pyplot methods. Plus some custom functionality"""
+
+        if func in self.user_plots:  # 'user' plots methods
+            getattr(self, func)(*args, **kwargs)
+        else:  # 'pyplot' methods
+            getattr(plt, func)(*args, **kwargs)
+
+    def plot_0(self, *args, **kwargs):
+        plt.close('all')
+        plt.plot(*args, **kwargs)
+        plt.grid()
+        plt.axis('auto')
+        plt.show(block=False)
+
+    def plot_0_blocked(self, *args, **kwargs):
+        plt.close('all')
+        plt.plot(*args, **kwargs)
+        plt.grid()
+        plt.axis('auto')
+        plt.show(block=True)

@@ -54,12 +54,12 @@ class Todo(Scrpt):
 
 
 
-    def __init__(self, path2log=None, settings=None):
-        default_settings =  {
-                        'Holidays': ['2017/01/01', '2017/01/07']
-                    }
-        Scrpt.__init__(self, path2log, default_settings)
-        Scrpt.setup(self, settings)
+    # def __init__(self, path2log=None, settings=None):
+    #     default_settings =  {
+    #                     'Holidays': ['2017/01/01', '2017/01/07']
+    #                 }
+    #     # Scrpt.__init__(self, path2log, default_settings)
+    #     Scrpt.setup(self, settings)
 
     def gen_todo_tbl_tmpl(self, pndg={}):
         """Generate Task&Estimation template table"""
