@@ -23,9 +23,10 @@ class Scrpt(Scrpt_base):
         # create Logger
         logging.setLoggerClass(Log.Log)
         self.log = logging.getLogger(__name__)
-        path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == path2log else path2log
-        self.log.add_handler(path2log)
 
+        # path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == path2log else path2log
+        # self.log.add_handler(path2log)
+        self.log.info('Python %s' % sys.version)
         self.jobs = self.generate_job_list()  # job list
         self.log.job('started', 'SCRPT')
         self.util = Util.Util(self.log, self.cfg)  # create Util inst

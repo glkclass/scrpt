@@ -46,7 +46,7 @@ class Rmt(Scrpt_base):
         fabric.state.env['host_string'] = crdntl['user'] + '@' + crdntl['ip']
         fabric.state.env['password'] = crdntl['pass']
         fabric.state.env['timeout'] = 10
-        fabric.state.env['stdout'] = self.log.fid
+        # fabric.state.env['stdout'] = self.log.fid
 
     def cmd(self, cmd, path='.'):
         """Login remote server via ssh and run cmd remotely"""
