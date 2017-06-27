@@ -4,6 +4,7 @@ import os
 import shutil
 import stat
 import logging
+import re
 
 from Scrpt_base import Scrpt_base
 from Log import Log
@@ -135,4 +136,24 @@ class Path(Scrpt_base):
             elif self.isdir(path_item):
                 shutil.rmtree(path_item)
 
-
+    def remove_patt(self, path, pattern_2_remove, verbosity=20):
+        if not self.isdir(path):
+            return
+        self.log.log(verbosity, self.log_message['remove_dir_content']['folder_exists'] % path)
+        if self.cfg['print_cmd']:
+            return
+        patt_list = self.make_list(pattern_2_remove)
+        dir_item_list = os.listdir(path)
+        for item in dir_item_list:
+            for patt in patt_list:
+                foo = re.search(patt, item)
+                if foo:
+                    break
+            else:
+                continue
+            path_item = os.path.join(path, item)
+            self.log.log(verbosity, self.log_message['remove_dir_content']['item_exists'] % path_item)              
+            if os.path.isfile(path_item):
+                os.remove(path_item)
+            elif self.isdir(path_item):
+                shutil.rmtree(path_item)

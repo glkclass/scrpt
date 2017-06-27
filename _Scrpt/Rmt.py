@@ -1,5 +1,6 @@
 from sys import platform
 import os
+import sys
 import fabric.api
 import fabric.operations
 import logging
@@ -14,8 +15,8 @@ class Rmt(Scrpt_base):
     To be embedded in others classes requiring such functionality"""
 
     log_message =   {
-                        'upload': '\'Rmt.upload(...)\' status: %s',
-                        'download': '\'Rmt.download(...)\' status: %s'
+                        'upload': '\'Rmt.upload()\' status: %s',
+                        'download': '\'Rmt.download()\' status: %s'
                     }
 
     default_settings =  {
@@ -46,16 +47,14 @@ class Rmt(Scrpt_base):
         fabric.state.env['host_string'] = crdntl['user'] + '@' + crdntl['ip']
         fabric.state.env['password'] = crdntl['pass']
         fabric.state.env['timeout'] = 10
-        # fabric.state.env['stdout'] = self.log.fid
+        fabric.state.env['warn_only'] = True
 
-    def cmd(self, cmd, path='.'):
+    def run(self, cmd, path='.'):
         """Login remote server via ssh and run cmd remotely"""
         self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
         with fabric.api.cd(path):
-            if self.log:
-                fabric.api.run(cmd, stdout=self.log.hdlr, stderr=self.log.hdlr)
-            else:
-                fabric.api.run(cmd)
+            # self.log.info(cmd)
+            fabric.api.run(cmd, stderr=sys.stdout)
 
     def upload(self, localpath, remotepath, verbosity=20):
         """Upload <single file/group of files> to remote host via sftp"""

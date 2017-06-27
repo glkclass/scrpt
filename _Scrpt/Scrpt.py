@@ -16,13 +16,14 @@ class Scrpt(Scrpt_base):
 
     default_settings = {'shtdwn': False}
 
-    def __init__(self, path2log=None, user_settings={}):
+    def __init__(self, user_settings={}):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
 
         # create Logger
         logging.setLoggerClass(Log.Log)
         self.log = logging.getLogger(__name__)
+        logging.setLoggerClass(logging.Logger)
 
         # path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == path2log else path2log
         # self.log.add_handler(path2log)
@@ -53,9 +54,21 @@ class Scrpt(Scrpt_base):
         self.pc_shutdown('/h')
 
     def parse_args(self, args2parse):
-        """Parse input arguments if script should be calling with input args."""
+        """ Parse input arguments if script should be calling with input args.
+            Usage:
+                <Code>
+                    ...
+                    args.append({   'name': arg_name, 
+                                    'default': default_value, 
+                                    'type': arg_type, 
+                                    'values': list_of_possible_values, '
+                                    help': 'help string'})
+                    parsed_args = scr.parse_args(args)
+                    ...
+                </Code>
+                'arg_name' is the only one mandatory field, others are optional.
+        """
         parser = argparse.ArgumentParser(description='Scrpt', formatter_class=argparse.RawTextHelpFormatter)
-
         args2parse = self.make_list(args2parse)
         # if not type(args2parse) is dict:
         #     self.log.fatal('Wrong args2parse structure: %s. Should be defined as dict!!!' % str(args2parse))
@@ -68,29 +81,31 @@ class Scrpt(Scrpt_base):
             if 'name' in arg.keys():
                 arg_name = arg['name']
             else:
-                self.log.fatal('Wrong arg structure %s (mandatory field \'name\' is absent)!!!' % str(arg))
+                self.log.fatal('Wrong arg structure: %s (mandatory field \'name\' is absent)!!!' % str(arg))
 
             arg_help = arg['help'] if 'help' in arg.keys() else ''
+            arg_type = arg['type'] if 'type' in arg.keys() else str
 
             if 'default' in arg.keys():
-                parser.add_argument('-%s' % arg_name, help=arg_help, default=arg['default'])
+                parser.add_argument('-%s' % arg_name, type=arg_type, help=arg_help, default=arg['default'])
             else:
-                parser.add_argument('%s' % arg_name, help=arg_help)
+                parser.add_argument('%s' % arg_name, type=arg_type, help=arg_help)
 
         args = parser.parse_args()
         args = vars(args)
 
-        # check input arg values if possible options were defined
+        # check input arg values if possible values were defined
         for arg in args2parse:
-            arg_options = self.make_list(arg['options']) if 'options' in arg.keys() else None
-            if arg_options is not None:
+            arg_values = self.make_list(arg['values']) if 'values' in arg.keys() else None
+            if arg_values is not None:
                 if 'default' in arg.keys():
-                    arg_options.append(arg['default'])
-                for item in arg_options:
+                    if arg['default'] not in arg_values:
+                        arg_values.append(arg['default'])
+                for item in arg_values:
                     if args[arg['name']] == str(item):
                         break
                 else:
-                    self.log.fatal('Wrong input arg value: %s. Possible options are: %s' % (args[arg['name']], arg_options))
+                    self.log.fatal('Wrong input arg value: %s. Possible values are: %s' % (args[arg['name']], arg_values))
         return args
 
     def generate_job_list(self):
@@ -133,6 +148,6 @@ class Scrpt(Scrpt_base):
             time.sleep(tme2slp)
             self.log.time()
 
-    def upload_scrpt_stuff(self, src_path='C:\\avv\\design\\_avv\\scrpt\\Scrpt', dst_path='design/_avv_scrpt/_Scrpt'):
-        for item in ('__init__.py', 'File.py', 'Log.py','Stream2Logger.py', 'Path.py', 'Rmt.py', 'Scrpt.py', 'Scrpt_base.py', 'Util.py'):
-            self.util.rmt.upload(os.path.join(src_path, item), dst_path)
+    def upload_scrpt_stuff(self, src_path='C:\\avv\\design\\_avv\\scrpt\\_Scrpt', dst_path='design/_Scrpt/_Scrpt'):
+        # for item in ('__init__.py', 'File.py', 'Log.py','Stream2Logger.py', 'Path.py', 'Rmt.py', 'Scrpt.py', 'Scrpt_base.py', 'Util.py'):
+        self.util.rmt.upload(os.path.join(src_path, '*.py'), dst_path)

@@ -27,6 +27,7 @@ class Log(Logger, Scrpt_base):
                     'fatal':        '%(indent)s[FTL] : %(message)s',
                     'log':          '%(indent)s[LOG] : %(message)s',
                     'xxx':          '%(indent)s[XXX] : %(message)s',
+                    'xxxx':         '%(indent)s[XXXX] : %(message)s',
                     'time':         '%(indent)s[TME] : %(message)s : %(asctime)s',
                     'time_delta':   '%(indent)s[TME] : %(message)s : %(asctime)s : [DLT] : %(delta)s',
                     'cmd':          '%(indent)s[CMD] : %(message)s : [TME] : %(asctime)s',
@@ -45,10 +46,11 @@ class Log(Logger, Scrpt_base):
     def __init__(self, name):
         Scrpt_base.__init__(self, self.default_settings)
         Logger.__init__(self, name)
-        self.setLevel(self.INFO)
+
+        self.setLevel(logging.INFO)
         self.job_time_stack = {'start': {}, 'time_delta': self.get_time()['now']}  # to store job start/finish time, delta times, ...
         self.indent_message(0)
-        self.hdlr = logging.StreamHandler()
+        self.hdlr = logging.StreamHandler(sys.stdout)
         self.addHandler(self.hdlr)
 
         sys.stdout = Stream2Logger('stdout', self, self.INFO)
@@ -60,35 +62,38 @@ class Log(Logger, Scrpt_base):
         self.addHandler(self.hdlr)
 
     def indent_message(self, indent_val):
+        # print('xxx: ' + str(indent_val) )
         self.indent = indent_val if 0 == indent_val else self.indent + indent_val
         self.extra['indent'] = self.indent * '\t'
 
     def std(self, stdtype, lvl, msg):
         """Print messages from 'STDOUT/ERR'"""
+        # print('indent: ' + str(self.indent))
         self.hdlr.setFormatter(logging.Formatter(self.msg_frmt[stdtype]))
         Logger.log(self, lvl, msg, extra=self.extra)
 
     def log(self, lvl, msg, *args, **kwargs):
         """Print 'Info' message"""
         if lvl in self.log_level:
-            # self.extra['stack_info'] = None
             kwargs['extra'] = self.extra
             self.log_func[lvl](self, msg, *args, **kwargs)
+            # print (msg)
         else:
             self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['log']))
             kwargs['extra'] = self.extra
-            Logger.log(self, lvl, msg, *args, **kwargs)
-            self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['xxx']))
+            Logger.log(self, lvl, 'vvv' + msg, *args, **kwargs)
+            # self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['xxx']))
 
     def debug(self, msg, *args, **kwargs):
         """Print 'Info' message"""
         self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['debug']))
         kwargs['extra'] = self.extra
         Logger.debug(self, msg, *args, **kwargs)
-        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['xxx']))
+        self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['xxxx']))
 
     def info(self, msg, *args, **kwargs):
         """Print 'Info' message"""
+        # print('indent: ' + str(self.indent))
         self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['info']))
         kwargs['extra'] = self.extra
         Logger.info(self, msg, *args, **kwargs)
@@ -141,6 +146,7 @@ class Log(Logger, Scrpt_base):
 
     def job(self, mode='started', name='', lvl=INFO):
         """Print 'job' start/finish message"""
+        # print('indent: ' + str(self.indent))
         if mode == 'started':
             self.job_time_stack['start'][name] = self.get_time()['now']
         elif mode == 'finished':
@@ -153,7 +159,7 @@ class Log(Logger, Scrpt_base):
 
         if mode == 'started':
             self.indent_message(1)
-
+        
     def cmd(self, msg='', lvl=INFO):
         """Print 'cmd' + 'time'"""
         self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['cmd'], datefmt=self.timefmt))

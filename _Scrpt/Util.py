@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 import logging
-import sys
+import socket
 import matplotlib.pyplot as plt
 
 from Scrpt_base import Scrpt_base
@@ -44,6 +44,12 @@ class Util(Scrpt_base):
         self.path = Path(self.log, self.cfg)
         self.file = File(self.log, self.cfg)
         self.rmt = Rmt(self.log, self.file, self.cfg)
+
+    def get_hostip(self):
+        return socket.gethostbyname(self.get_hostname())
+
+    def get_hostname(self):
+        return socket.gethostname()
 
     def get_folder_item(self, dir, file_pattern, verbosity=20):
         file_pattern_list = self.make_list(file_pattern)
