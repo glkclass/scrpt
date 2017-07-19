@@ -16,19 +16,23 @@ class Scrpt(Scrpt_base):
 
     default_settings = {'shtdwn': False}
 
-    def __init__(self, user_settings={}):
+    def __init__(self, log=None, user_settings={}):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
-
         # create Logger
-        logging.setLoggerClass(Log.Log)
-        self.log = logging.getLogger(__name__)
-        logging.setLoggerClass(logging.Logger)
+        if log:
+            self.log = log
+        else:
+            logging.setLoggerClass(Log.Log)
+            self.log = logging.getLogger('__name__')
+            logging.setLoggerClass(logging.Logger)
 
         # path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == path2log else path2log
         # self.log.add_handler(path2log)
         self.log.info('Python %s' % sys.version)
-        self.jobs = self.generate_job_list()  # job list
+        self.methods = self.get_methods()  # job list
+        self.attr = self.get_attr()  # job list
+
         self.log.job('started', 'SCRPT')
         self.util = Util.Util(self.log, self.cfg)  # create Util inst
         self.init_pc_shtdwn(5000)  # set PC 'sleep delay' if 'shutdowning'
@@ -58,15 +62,16 @@ class Scrpt(Scrpt_base):
             Usage:
                 <Code>
                     ...
+                    args = []
                     args.append({   'name': arg_name, 
                                     'default': default_value, 
                                     'type': arg_type, 
-                                    'values': list_of_possible_values, '
-                                    help': 'help string'})
+                                    'values': list_of_possible_values,
+                                    'help': 'help string'})
                     parsed_args = scr.parse_args(args)
                     ...
                 </Code>
-                'arg_name' is the only one mandatory field, others are optional.
+                'arg_name' is the only mandatory field, others are optional.
         """
         parser = argparse.ArgumentParser(description='Scrpt', formatter_class=argparse.RawTextHelpFormatter)
         args2parse = self.make_list(args2parse)
@@ -98,43 +103,72 @@ class Scrpt(Scrpt_base):
         for arg in args2parse:
             arg_values = self.make_list(arg['values']) if 'values' in arg.keys() else None
             if arg_values is not None:
-                if 'default' in arg.keys():
-                    if arg['default'] not in arg_values:
-                        arg_values.append(arg['default'])
                 for item in arg_values:
                     if args[arg['name']] == str(item):
                         break
                 else:
                     self.log.fatal('Wrong input arg value: %s. Possible values are: %s' % (args[arg['name']], arg_values))
+
         return args
 
-    def generate_job_list(self):
+    def get_methods(self):
         """Create dict: {class method name: class method handle}"""
-        methods = inspect.getmembers(self, predicate=inspect.ismethod)
-        jobs = [item for item in methods if not item[0].startswith('_') and not item[0].endswith('_')]
-        job_list = {}
-        for item in jobs:
-            job_list[item[0]] = item[1]
-        return job_list
+        method_list = inspect.getmembers(self, predicate=inspect.ismethod)
+        method_list = [item for item in method_list if not item[0].startswith('_') and not item[0].endswith('_')]
+        methods = {}
+        for item in method_list:
+            methods[item[0]] = item[1]
+        return methods
+
+    def get_attr(self):
+        return self.__dict__
 
     def job(self, job, *pos_args, **key_args):
         """Job wrapper. Used to call any class method as job (add appropriate log messages, measure duration, ...)"""
         if type(job) is str:
-            job_name = job
-            job_handle = self.jobs[job_name]
+            hier = job.split('.')
+            if 1 == len(hier):
+                if job not in self.methods.keys():
+                    self.log.fatal('Unrecognized job: %s (...)' % job)
+                else:
+                    job_name = job
+                    job_handle = self.methods[job]
+            elif 2 == len(hier):
+                attr_name = hier[0]
+                if attr_name not in self.attr.keys():
+                    self.log.fatal('Unrecognized nested job: %s (...) : %s' % (job, attr_name))
+                else:
+                    method_name = hier[1]
+                    attr = self.attr[attr_name]
+                    if method_name not in attr.methods.keys(): 
+                        self.log.fatal('Unrecognized nested job: %s (...) : %s' % (job, method_name))
+                    else:
+                        job_name = job
+                        job_handle = attr.methods[method_name]
+            else:
+                self.log.fatal('Wrong \'job\': maximum two nested levels are supported, but %d were applied: %s (...)' % (len(hier), job))
         elif isinstance(job, types.MethodType):
             job_handle = job
-            for key in self.jobs.keys():
-                if job == self.jobs[key]:
+            for key in self.methods.keys():
+                if job_handle == self.methods[key]:
                     job_name = key
                     break
             else:
-                self.log.fatal('Unrecognized method: %s' % job)
+                self.log.fatal('Unrecognized job: %s' % job)
 
         self.log.job('started', job_name)
         retval = job_handle(*pos_args, **key_args)
         self.log.job('finished', job_name)
         return retval
+
+
+
+
+
+
+
+
+
 
     def sleep(self, time2sleep=None):
         """Generate pause for 'time2sleep' seconds during execution..."""
@@ -148,6 +182,6 @@ class Scrpt(Scrpt_base):
             time.sleep(tme2slp)
             self.log.time()
 
-    def upload_scrpt_stuff(self, src_path='C:\\avv\\design\\_avv\\scrpt\\_Scrpt', dst_path='design/_Scrpt/_Scrpt'):
+    def upload_scrpt_stuff(self, src_path='C:\\avv\\design\\_avv\\scrpt\\_Scrpt', dst_path='design/_Scrpt'):
         # for item in ('__init__.py', 'File.py', 'Log.py','Stream2Logger.py', 'Path.py', 'Rmt.py', 'Scrpt.py', 'Scrpt_base.py', 'Util.py'):
         self.util.rmt.upload(os.path.join(src_path, '*.py'), dst_path)

@@ -21,7 +21,7 @@ class Rmt(Scrpt_base):
 
     default_settings =  {
                             'platform': platform,
-                            'environ': {'PATH2CRDNTL': 'AVV_CRDNTL'},
+                            'environ': {'PATH2CRDNTL': 'SCRPT_CRDNTL'},
                             'rmt': 'srv_34'
                         }
 
