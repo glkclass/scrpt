@@ -52,6 +52,7 @@ class Log(Logger, Scrpt_base):
         self.indent_message(0)
         self.hdlr = logging.StreamHandler(sys.stdout)
         self.addHandler(self.hdlr)
+        self.propagate = False
 
         sys.stdout = Stream2Logger('stdout', self, self.INFO)
         # sys.stderr = Stream2Logger('stderr', self, self.ERROR)
@@ -159,7 +160,7 @@ class Log(Logger, Scrpt_base):
 
         if mode == 'started':
             self.indent_message(1)
-        
+
     def cmd(self, msg='', lvl=INFO):
         """Print 'cmd' + 'time'"""
         self.hdlr.setFormatter(logging.Formatter(self.msg_frmt['cmd'], datefmt=self.timefmt))
