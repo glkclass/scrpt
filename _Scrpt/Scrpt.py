@@ -15,6 +15,7 @@ class Scrpt(Scrpt_base):
     basic utils / logging&reporting / local&remote file access / etc"""
 
     default_settings = {'shtdwn': False}
+    args = []
 
     def __init__(self, log=None, user_settings={}):
         Scrpt_base.__init__(self, self.default_settings)
@@ -26,16 +27,27 @@ class Scrpt(Scrpt_base):
             logging.setLoggerClass(Log.Log)
             self.log = logging.getLogger('__name__')
             logging.setLoggerClass(logging.Logger)
-
         # path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == path2log else path2log
         # self.log.add_handler(path2log)
-        self.log.info('Python %s' % sys.version)
-        self.methods = self.get_methods()  # job list
-        self.attr = self.get_attr()  # job list
 
-        self.log.job('started', 'SCRPT')
         self.util = Util.Util(self.log, self.cfg)  # create Util inst
+        self.methods = self.get_methods()  # job list
+        self.attr = self.get_attr()  # attr list
+        self.parsed_args = self.parse_args()
         self.init_pc_shtdwn(5000)  # set PC 'sleep delay' if 'shutdowning'
+
+    def main(self):
+        return
+
+    def run(self):
+        self.log.info('Python %s' % sys.version)
+        self.log.job('started', 'SCRPT')
+        self.main()
+        self.log.job('finished', 'SCRPT')
+        self.log.info('SCRPT fnshd.')
+        self.log.close()
+        self.pc_shutdown('/h')
+        return
 
     def init_pc_shtdwn(self, mins):
         """Set large "PC sleep delay" when long term job scheduled with "PC shutdown" at the finish."""
@@ -48,16 +60,8 @@ class Scrpt(Scrpt_base):
             self.util.pc_setup_sleep(120)
             cmd = 'shutdown' if not opt else 'shutdown %s' % str(opt)  # shutdown or shutdown /h
             self.util.subprocess_call(cmd)
-
-    def finish(self):
-        """Finalize Scrpt: write final message/close files/turn off PC/..."""
-        self.log.job('finished', 'SCRPT')
-        self.log.info('SCRPT fnshd.')
-
-        self.log.close()
-        self.pc_shutdown('/h')
-
-    def parse_args(self, args2parse):
+        
+    def parse_args(self):
         """ Parse input arguments if script should be calling with input args.
             Usage:
                 <Code>
@@ -71,15 +75,18 @@ class Scrpt(Scrpt_base):
                     parsed_args = scr.parse_args(args)
                     ...
                 </Code>
-                'arg_name' is the only mandatory field, others are optional.
+                'name' is the only mandatory field, others are optional.
         """
+        if not self.args:
+            return {}
+
         parser = argparse.ArgumentParser(description='Scrpt', formatter_class=argparse.RawTextHelpFormatter)
-        args2parse = self.make_list(args2parse)
+        self.args = self.make_list(self.args)
         # if not type(args2parse) is dict:
         #     self.log.fatal('Wrong args2parse structure: %s. Should be defined as dict!!!' % str(args2parse))
 
         # add args to be parsed
-        for arg in args2parse:
+        for arg in self.args:
             if not type(arg) is dict:
                 self.log.fatal('Wrong args2parse structure: %s. Should be defined as dict!!!' % str(arg))
 
@@ -100,7 +107,7 @@ class Scrpt(Scrpt_base):
         args = vars(args)
 
         # check input arg values if possible values were defined
-        for arg in args2parse:
+        for arg in self.args:
             arg_values = self.make_list(arg['values']) if 'values' in arg.keys() else None
             if arg_values is not None:
                 for item in arg_values:
@@ -161,15 +168,6 @@ class Scrpt(Scrpt_base):
         self.log.job('finished', job_name)
         return retval
 
-
-
-
-
-
-
-
-
-
     def sleep(self, time2sleep=None):
         """Generate pause for 'time2sleep' seconds during execution..."""
         tme2slp = time2sleep if time2sleep else self.cfg['time2sleep'] if 'time2sleep' in self.cfg.keys() else 0
@@ -182,6 +180,6 @@ class Scrpt(Scrpt_base):
             time.sleep(tme2slp)
             self.log.time()
 
-    def upload_scrpt_stuff(self, src_path='C:\\avv\\design\\_avv\\scrpt\\_Scrpt', dst_path='design/_Scrpt'):
+    def upload_scrpt_stuff(self, src_path, dst_path):
         # for item in ('__init__.py', 'File.py', 'Log.py','Stream2Logger.py', 'Path.py', 'Rmt.py', 'Scrpt.py', 'Scrpt_base.py', 'Util.py'):
         self.util.rmt.upload(os.path.join(src_path, '*.py'), dst_path)
