@@ -21,14 +21,19 @@ class Scrpt(Scrpt_base):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
         # create Logger
-        if log:
-            self.log = log
+
+
+
+        if log and str != type(log):
+            self.log = log              
         else:
             logging.setLoggerClass(Log.Log)
             self.log = logging.getLogger('__name__')
             logging.setLoggerClass(logging.Logger)
-        # path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == path2log else path2log
-        # self.log.add_handler(path2log)
+            if str == type(log):
+                path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == log else log
+                self.log.add_handler(path2log)
+                
 
         self.util = Util.Util(self.log, self.cfg)  # create Util inst
         self.methods = self.get_methods()  # job list
@@ -37,7 +42,7 @@ class Scrpt(Scrpt_base):
         self.init_pc_shtdwn(5000)  # set PC 'sleep delay' if 'shutdowning'
 
     def main(self):
-        return
+        self.job(self.parsed_args['job'])
 
     def run(self):
         self.log.info('Python %s' % sys.version)
@@ -60,7 +65,7 @@ class Scrpt(Scrpt_base):
             self.util.pc_setup_sleep(120)
             cmd = 'shutdown' if not opt else 'shutdown %s' % str(opt)  # shutdown or shutdown /h
             self.util.subprocess_call(cmd)
-        
+
     def parse_args(self):
         """ Parse input arguments if script should be calling with input args.
             Usage:
@@ -130,41 +135,41 @@ class Scrpt(Scrpt_base):
     def get_attr(self):
         return self.__dict__
 
-    def job(self, job, *pos_args, **key_args):
+    def job(self, scr_job, **kwargs):
         """Job wrapper. Used to call any class method as job (add appropriate log messages, measure duration, ...)"""
-        if type(job) is str:
-            hier = job.split('.')
+        if type(scr_job) is str:
+            hier = scr_job.split('.')
             if 1 == len(hier):
-                if job not in self.methods.keys():
-                    self.log.fatal('Unrecognized job: %s (...)' % job)
+                if scr_job not in self.methods.keys():
+                    self.log.fatal('Unrecognized job: %s (...)' % scr_job)
                 else:
-                    job_name = job
-                    job_handle = self.methods[job]
+                    job_name = scr_job
+                    job_handle = self.methods[scr_job]
             elif 2 == len(hier):
                 attr_name = hier[0]
                 if attr_name not in self.attr.keys():
-                    self.log.fatal('Unrecognized nested job: %s (...) : %s' % (job, attr_name))
+                    self.log.fatal('Unrecognized nested job: %s (...) : %s' % (scr_job, attr_name))
                 else:
                     method_name = hier[1]
                     attr = self.attr[attr_name]
                     if method_name not in attr.methods.keys(): 
-                        self.log.fatal('Unrecognized nested job: %s (...) : %s' % (job, method_name))
+                        self.log.fatal('Unrecognized nested job: %s (...) : %s' % (scr_job, method_name))
                     else:
-                        job_name = job
+                        job_name = scr_job
                         job_handle = attr.methods[method_name]
             else:
-                self.log.fatal('Wrong \'job\': maximum two nested levels are supported, but %d were applied: %s (...)' % (len(hier), job))
-        elif isinstance(job, types.MethodType):
-            job_handle = job
+                self.log.fatal('Wrong \'job\': maximum two nested levels are supported, but %d were applied: %s (...)' % (len(hier), scr_job))
+        elif isinstance(scr_job, types.MethodType):
+            job_handle = scr_job
             for key in self.methods.keys():
                 if job_handle == self.methods[key]:
                     job_name = key
                     break
             else:
-                self.log.fatal('Unrecognized job: %s' % job)
+                self.log.fatal('Unrecognized job: %s' % scr_job)
 
         self.log.job('started', job_name)
-        retval = job_handle(*pos_args, **key_args)
+        retval = job_handle(**kwargs)
         self.log.job('finished', job_name)
         return retval
 

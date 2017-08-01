@@ -18,5 +18,5 @@ class Stream2Logger(object):
                 self.buf = ''
 
     def flush(self):
-        self.logger.hdlr.flush()
+        self.logger.flush()
         pass
