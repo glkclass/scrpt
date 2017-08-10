@@ -1,6 +1,7 @@
 from sys import platform
 import os.path
 import os
+import sys
 import re
 import subprocess
 import logging
@@ -114,7 +115,7 @@ class Util(Scrpt_base):
                 subprocess.call(cmd, shell=shl)
             else:
                 # subprocess.call(cmd, shell=shl, stdout=sys.stdout, stderr=sys.stderr)
-                subprocess.call(cmd, shell=shl)
+                subprocess.call(cmd, shell=shl, stdout=sys.stderr)
 
     def environ(self, name_value, verbosity=40):
         """ Set/read environment variable.

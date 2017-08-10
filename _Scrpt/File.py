@@ -37,7 +37,7 @@ class File(Scrpt_base):
 
     def load(self, path2file, format='txt', strip=None, verbosity=20):
         loader = {'json': json.load, 'yaml': yaml.load}
-        if not self.path.isfile(path2file, 'load(\'%s\' ...)' % format, verbosity):
+        if not self.path.isfile(path2file, verbosity):
             return None
         if 'txt' == format:
             with open(path2file, 'r') as txt:
@@ -126,7 +126,7 @@ class File(Scrpt_base):
         arch_h.close()
 
     def remove_patt(self, path_2_txt, pattern_2_remove, verbosity=20):
-        lines_in = self.load('txt', path_2_txt, verbosity=verbosity)
+        lines_in = self.load(path_2_txt, 'txt', verbosity=verbosity)
         if not lines_in:
             return
         patt_list = self.make_list(pattern_2_remove)
@@ -139,3 +139,17 @@ class File(Scrpt_base):
             else:
                 lines_out.append(line)
         self.save('txt', lines_out, path_2_txt)
+
+    def find_patt(self, path_2_txt, pattern_2_find, verbosity=20):
+        lines_in = self.load(path_2_txt, 'txt', verbosity=verbosity)
+        lines_out = []
+        if not lines_in:
+            return lines_out
+
+        patt_list = self.make_list(pattern_2_find)
+        for line in lines_in:
+            for patt in patt_list:
+                foo = re.search(patt, line)
+                if foo:
+                    lines_out.append(line)
+        return lines_out

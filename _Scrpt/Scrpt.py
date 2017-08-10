@@ -45,7 +45,9 @@ class Scrpt(Scrpt_base):
         self.job(self.parsed_args['job'])
 
     def run(self):
-        self.log.info('Python %s' % sys.version)
+        self.log.info('Python : %s' % sys.version)
+        self.log.info('Host : %s' % self.util.get_hostname())
+
         self.log.job('started', 'SCRPT')
         self.main()
         self.log.job('finished', 'SCRPT')
@@ -104,12 +106,14 @@ class Scrpt(Scrpt_base):
             arg_type = arg['type'] if 'type' in arg.keys() else str
 
             if 'default' in arg.keys():
-                parser.add_argument('-%s' % arg_name, type=arg_type, help=arg_help, default=arg['default'])
+                parser.add_argument('--%s' % arg_name, type=arg_type, help=arg_help, default=arg['default'])
             else:
                 parser.add_argument('%s' % arg_name, type=arg_type, help=arg_help)
 
         args = parser.parse_args()
         args = vars(args)
+
+        self.log.info([(key, args[key], type(args[key])) for key in args.keys()])
 
         # check input arg values if possible values were defined
         for arg in self.args:

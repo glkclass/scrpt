@@ -19,8 +19,8 @@ class Path(Scrpt_base):
                         'isdir': 'There is no such folder: \'%s\'!',
                         'exists': 'There is no such path: \'%s\'!',
                         'mkdir':    {
-                                        'file_exists': 'The dir: \'%s\' wasn\'t created due to existing file of same name!',
-                                        'folder_exists': 'The dir: \'%s\' already exists.',
+                                        'file_exists': 'The folder: \'%s\' wasn\'t created due to existing file of same name!',
+                                        'folder_exists': 'The folder: \'%s\' already exists.',
                                         'folder_doesnt_exist': 'The folder \'%s\' doesn\'t exist. Has been created...'
                                     },
 
@@ -55,7 +55,7 @@ class Path(Scrpt_base):
             logging.setLoggerClass(Log.Log)
             self.log = logging.getLogger(__name__)
 
-    def isfile(self, path, msg=None, verbosity=20):
+    def isfile(self, path, verbosity=20):
         path_list = self.make_list(path)
         for path in path_list:
             if not os.path.isfile(path):
@@ -136,14 +136,15 @@ class Path(Scrpt_base):
             elif self.isdir(path_item):
                 shutil.rmtree(path_item)
 
-    def remove_patt(self, path, pattern_2_remove, verbosity=20):
-        if not self.isdir(path):
+    def remove_patt(self, folder, pattern_2_remove, verbosity=20):
+        """Remove path based on given pattern"""
+        if not self.isdir(folder):
             return
-        self.log.log(verbosity, self.log_message['remove_dir_content']['folder_exists'] % path)
+        self.log.log(verbosity, self.log_message['remove_dir_content']['folder_exists'] % folder)
         if self.cfg['print_cmd']:
             return
         patt_list = self.make_list(pattern_2_remove)
-        dir_item_list = os.listdir(path)
+        dir_item_list = os.listdir(folder)
         for item in dir_item_list:
             for patt in patt_list:
                 foo = re.search(patt, item)
@@ -151,9 +152,26 @@ class Path(Scrpt_base):
                     break
             else:
                 continue
-            path_item = os.path.join(path, item)
-            self.log.log(verbosity, self.log_message['remove_dir_content']['item_exists'] % path_item)              
+            path_item = os.path.join(folder, item)
+            self.log.log(verbosity, self.log_message['remove_dir_content']['item_exists'] % path_item)
             if os.path.isfile(path_item):
                 os.remove(path_item)
             elif self.isdir(path_item):
                 shutil.rmtree(path_item)
+
+    def find_patt(self, folder, pattern_2_find, verbosity=20):
+        """Find path based on given pattern"""
+        if not self.isdir(folder):
+            return None
+
+        path_out = []
+        patt_list = self.make_list(pattern_2_find)
+        dir_item_list = os.listdir(folder)
+        for item in dir_item_list:
+            for patt in patt_list:
+                foo = re.search(patt, item)
+                if foo:                
+                    path_item = os.path.join(folder, item)
+                    path_out.append(path_item)
+                    break
+        return path_out

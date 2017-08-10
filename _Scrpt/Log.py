@@ -21,13 +21,13 @@ class Log(Logger, Scrpt_base):
                     'stderr':       '%(indent)s[SDR] : %(message)s',
                     'debug':        '%(indent)s[DBG] : %(message)s',
                     'info':         '%(indent)s[INF] : %(message)s',
+                    'tag':          '%(indent)s[TAG] : %(message)s',
                     'warning':      '%(indent)s[WAR] : %(message)s',
                     'error':        '%(indent)s[ERR] : %(message)s',
                     # 'fatal':        '%(indent)s[FTL] : %(stack_info)s : %(message)s',
                     'fatal':        '%(indent)s[FTL] : %(message)s',
                     'log':          '%(indent)s[LOG] : %(message)s',
                     'xxx':          '%(indent)s[XXX] : %(message)s',
-                    'xxxx':         '%(indent)s[XXXX] : %(message)s',
                     'time':         '%(indent)s[TME] : %(message)s : %(asctime)s',
                     'time_delta':   '%(indent)s[TME] : %(message)s : %(asctime)s : [DLT] : %(delta)s',
                     'cmd':          '%(indent)s[CMD] : %(message)s : [TME] : %(asctime)s',
@@ -47,11 +47,11 @@ class Log(Logger, Scrpt_base):
         self.setLevel(logging.INFO)
         self.job_time_stack = {'start': {}, 'time_delta': self.get_time()['now']}  # to store job start/finish time, delta times, ...
         self.indent_message(0)
-        self.hdlr = {'console': logging.StreamHandler()}
+        self.hdlr = {'console': logging.StreamHandler(sys.stdout)}
         self.addHandler(self.hdlr['console'])
         self.propagate = False
 
-        sys.stdout = Stream2Logger('stdout', self, self.INFO)
+        # sys.stdout = Stream2Logger('stdout', self, self.INFO)
         # sys.stderr = Stream2Logger('stderr', self, self.ERROR)
 
     def add_handler(self, path2log):
@@ -62,12 +62,12 @@ class Log(Logger, Scrpt_base):
     def set_formatter(self, foo, **kwargs):
         for hdlr_i in self.hdlr.keys():
             self.hdlr[hdlr_i].setFormatter(logging.Formatter(self.msg_frmt[foo], **kwargs))
+            self.hdlr[hdlr_i].flush()
 
     def flush(self):
         for hdlr_i in self.hdlr.keys():
             self.hdlr[hdlr_i].flush()
 
-    
     def indent_message(self, indent_val):
         # print('xxx: ' + str(indent_val) )
         self.indent = indent_val if 0 == indent_val else self.indent + indent_val
@@ -75,7 +75,6 @@ class Log(Logger, Scrpt_base):
 
     def std(self, stdtype, lvl, msg):
         """Print messages from 'STDOUT/ERR'"""
-        # print('indent: ' + str(self.indent))
         self.set_formatter(stdtype)
         Logger.log(self, lvl, msg, extra=self.extra)
 
@@ -100,8 +99,14 @@ class Log(Logger, Scrpt_base):
 
     def info(self, msg, *args, **kwargs):
         """Print 'Info' message"""
-        # print('indent: ' + str(self.indent))
         self.set_formatter('info')
+        kwargs['extra'] = self.extra
+        Logger.info(self, msg, *args, **kwargs)
+        self.set_formatter('xxx')
+
+    def tag(self, msg, *args, **kwargs):
+        """Print 'Tag' message"""
+        self.set_formatter('tag')
         kwargs['extra'] = self.extra
         Logger.info(self, msg, *args, **kwargs)
         self.set_formatter('xxx')
@@ -151,9 +156,14 @@ class Log(Logger, Scrpt_base):
         Logger.log(self, lvl, msg, extra=self.extra)
         self.set_formatter('xxx')
 
+    def get_job_dur(self, job_name):
+        """ current 'job' run time """
+        job_dur = self.get_time()['now'] - self.job_time_stack['start'][job_name]
+        return job_dur
+
+
     def job(self, mode='started', name='', lvl=INFO):
         """Print 'job' start/finish message"""
-        # print('indent: ' + str(self.indent))
         if mode == 'started':
             self.job_time_stack['start'][name] = self.get_time()['now']
         elif mode == 'finished':
