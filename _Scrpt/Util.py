@@ -7,12 +7,14 @@ import subprocess
 import logging
 import socket
 import matplotlib.pyplot as plt
+import numpy as np
 
 from Scrpt_base import Scrpt_base
 from Log import Log
 from Rmt import Rmt
 from Path import Path
 from File import File
+from Plt import Plt
 
 
 class Util(Scrpt_base):
@@ -45,6 +47,7 @@ class Util(Scrpt_base):
         self.path = Path(self.log, self.cfg)
         self.file = File(self.log, self.cfg)
         self.rmt = Rmt(self.log, self.file, self.cfg)
+        self.plt = Plt(self.log, self.cfg)
 
     def get_hostip(self):
         return socket.gethostbyname(self.get_hostname())
@@ -184,27 +187,3 @@ class Util(Scrpt_base):
             else:
                 self.log.error('Wrong \'allign\' value')
                 return 'Wrong \'allign\' value'
-
-    user_plots = ('plot_0', 'plot_0_blocked')
-
-    def plt(self, func, *args, **kwargs):
-        """Proxy to call matplotlib.pyplot methods. Plus some custom functionality"""
-
-        if func in self.user_plots:  # 'user' plots methods
-            getattr(self, func)(*args, **kwargs)
-        else:  # 'pyplot' methods
-            getattr(plt, func)(*args, **kwargs)
-
-    def plot_0(self, *args, **kwargs):
-        plt.close('all')
-        plt.plot(*args, **kwargs)
-        plt.grid()
-        plt.axis('auto')
-        plt.show(block=False)
-
-    def plot_0_blocked(self, *args, **kwargs):
-        plt.close('all')
-        plt.plot(*args, **kwargs)
-        plt.grid()
-        plt.axis('auto')
-        plt.show(block=True)

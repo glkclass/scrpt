@@ -142,14 +142,17 @@ class File(Scrpt_base):
 
     def find_patt(self, path_2_txt, pattern_2_find, verbosity=20):
         lines_in = self.load(path_2_txt, 'txt', verbosity=verbosity)
-        lines_out = []
+        found_lines = []
+        parsed_lines = []
         if not lines_in:
-            return lines_out
+            return found_lines, parsed_lines
 
         patt_list = self.make_list(pattern_2_find)
         for line in lines_in:
             for patt in patt_list:
                 foo = re.search(patt, line)
                 if foo:
-                    lines_out.append(line)
-        return lines_out
+                    found_lines.append(line)
+                    parsed_lines.append(foo)
+                    break
+        return found_lines, parsed_lines
