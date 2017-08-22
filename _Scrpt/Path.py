@@ -162,9 +162,10 @@ class Path(Scrpt_base):
     def find_patt(self, folder, pattern_2_find, verbosity=20):
         """Find path based on given pattern"""
         if not self.isdir(folder):
-            return None
+            return None, None
 
-        path_out = []
+        found_path = []
+        parsed_path = []
         patt_list = self.make_list(pattern_2_find)
         dir_item_list = os.listdir(folder)
         for item in dir_item_list:
@@ -172,6 +173,7 @@ class Path(Scrpt_base):
                 foo = re.search(patt, item)
                 if foo:                
                     path_item = os.path.join(folder, item)
-                    path_out.append(path_item)
+                    found_path.append(path_item)
+                    parsed_path.append(foo)
                     break
-        return path_out
+        return found_path, parsed_path

@@ -6,8 +6,6 @@ import re
 import subprocess
 import logging
 import socket
-import matplotlib.pyplot as plt
-import numpy as np
 
 from Scrpt_base import Scrpt_base
 from Log import Log

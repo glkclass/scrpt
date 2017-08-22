@@ -142,7 +142,7 @@ class Log(Logger, Scrpt_base):
         Logger.critical(self, msg, *args, **kwargs)
         self.set_formatter('xxx')
 
-    def time(self, msg='', lvl=INFO):
+    def time(self, msg='Current time', lvl=INFO):
         """Print time"""
         self.set_formatter('time', datefmt=self.time_frmt)
         Logger.log(self, lvl, msg, extra=self.extra)

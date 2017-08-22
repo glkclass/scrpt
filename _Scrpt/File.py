@@ -55,7 +55,7 @@ class File(Scrpt_base):
                 return foo
 
     def save(self, data2store, path2file, format='txt', fo_mode='w', eol='\n', verbosity=20):
-        self.path.exists(path2file, 'save(\'%s\' ...)' % format, verbosity)
+        self.path.exists(path2file, verbosity)
         file_open_mode = {'w': 'w', 'a': 'a'}[fo_mode]
         fid = open(path2file, file_open_mode)
         if 'txt' == format:
@@ -72,7 +72,7 @@ class File(Scrpt_base):
     def pack(self, path2src, dst_basename='', arch_name='zip', arch_h=None, verbosity=20):
         arch_name = str(arch_name)
         dst_filename = dst_basename + '.' + arch_name
-        if not self.path.exists(path2src, 'pack(...)', verbosity):
+        if not self.path.exists(path2src, verbosity):
             return None
         if dst_basename:
             self.log.info(self.log_message['pack'] % (path2src, dst_filename))
