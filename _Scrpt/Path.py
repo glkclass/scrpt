@@ -3,7 +3,6 @@ import os.path
 import os
 import shutil
 import stat
-import logging
 import re
 
 from Scrpt_base import Scrpt_base
@@ -44,16 +43,10 @@ class Path(Scrpt_base):
 
     default_settings = {'print_cmd': False}
 
-    def __init__(self, log=None, user_settings=None):
+    def __init__(self, log, user_settings=None):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
-
-        if log:
-            self.log = log  # use external logger if exists
-        else:
-            # create own Logger
-            logging.setLoggerClass(Log.Log)
-            self.log = logging.getLogger(__name__)
+        self.log = log  # logger should be define outside
 
     def isfile(self, path, verbosity=20):
         path_list = self.make_list(path)

@@ -3,7 +3,6 @@ import os
 import sys
 import fabric.api
 import fabric.operations
-import logging
 
 import urllib
 from Scrpt_base import Scrpt_base
@@ -25,16 +24,11 @@ class Rmt(Scrpt_base):
                             'rmt': 'srv_34'
                         }
 
-    def __init__(self, log=None, file=None, user_settings=None):
+    def __init__(self, log, file=None, user_settings=None):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
-        if log:
-            self.log = log  # use external logger if exists
-        else:
-            # create own Logger
-            logging.setLoggerClass(Log.Log)
-            self.log = logging.getLogger(__name__)
-        self.file = file if file else File.File(self.settings)  # use external file lib if exists, else create internal one
+        self.log = log  # logger should be define outside
+        self.file = file if file else File.File(self.log, self.settings)  # use external file lib if exists, else create internal one
         self.load_crdntl()
 
     def http(self):

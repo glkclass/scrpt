@@ -1,4 +1,3 @@
-import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,16 +13,10 @@ class Plt(Scrpt_base):
 
     default_settings = {}
 
-    def __init__(self, log=None, user_settings=None):
+    def __init__(self, log, user_settings=None):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
-
-        if log:
-            self.log = log  # use external logger if exists
-        else:
-            # create own Logger
-            logging.setLoggerClass(Log.Log)
-            self.log = logging.getLogger(__name__)
+        self.log = log  # logger should be define outside
 
     def proxy(self, func, *args, **kwargs):
         """Proxy to call matplotlib.pyplot methods. Plus some custom functionality"""
@@ -53,7 +46,6 @@ class Plt(Scrpt_base):
         ax.grid(which='minor', alpha=0.2)
         ax.grid(which='major', alpha=0.5)
 
-    
     def plot_0(self, *args, **kwargs):
         plt.close('all')
         plt.plot(*args, **kwargs)
@@ -67,3 +59,13 @@ class Plt(Scrpt_base):
         plt.grid()
         plt.axis('auto')
         plt.show(block=True)
+
+    def lpf(self, x, delta=3):
+        y = []
+        for i in range(len(x)):
+            if i >= delta:
+                foo = sum(x[i - delta:i]) / delta
+                y.append(foo)
+            else:
+                y.append(x[i])
+        return y

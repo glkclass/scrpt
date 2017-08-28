@@ -7,7 +7,6 @@ import xml.etree.ElementTree
 import zipfile
 import tarfile
 import os
-import logging
 
 from Scrpt_base import Scrpt_base
 from Log import Log
@@ -24,15 +23,10 @@ class File(Scrpt_base):
                     }
     default_settings = {'print_cmd': False}
 
-    def __init__(self, log=None, user_settings=None):
+    def __init__(self, log, user_settings=None):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
-        if log:
-            self.log = log  # use external logger if exists
-        else:
-            # create own Logger
-            logging.setLoggerClass(Log.Log)
-            self.log = logging.getLogger(__name__)
+        self.log = log  # logger should be define outside
         self.path = Path(self.log, self.cfg)
 
     def load(self, path2file, format='txt', strip=None, verbosity=20):

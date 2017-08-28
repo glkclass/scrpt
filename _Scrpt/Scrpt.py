@@ -5,6 +5,7 @@ import inspect
 import types
 from Scrpt_base import Scrpt_base
 import logging
+import Args
 import Log
 import Util
 import time
@@ -21,30 +22,29 @@ class Scrpt(Scrpt_base):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
         # create Logger
-
-
-
         if log and str != type(log):
-            self.log = log              
+            self.log = log
         else:
             logging.setLoggerClass(Log.Log)
-            self.log = logging.getLogger('__name__')
+            self.log = logging.getLogger(__name__)
             logging.setLoggerClass(logging.Logger)
             if str == type(log):
                 path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == log else log
                 self.log.add_handler(path2log)
                 
-
+        self.args = Args.Args(self.log, self.cfg)
         self.util = Util.Util(self.log, self.cfg)  # create Util inst
         self.methods = self.get_methods()  # job list
         self.attr = self.get_attr()  # attr list
-        self.parsed_args = self.parse_args()
         self.init_pc_shtdwn(5000)  # set PC 'sleep delay' if 'shutdowning'
 
     def main(self):
-        self.job(self.parsed_args['job'])
+        self.job(self.args.job)
+        return 
 
     def run(self):
+        self.args._parse()
+
         self.log.info('Python : %s' % sys.version)
         self.log.info('Host : %s' % self.util.get_hostname())
 
@@ -67,65 +67,6 @@ class Scrpt(Scrpt_base):
             self.util.pc_setup_sleep(120)
             cmd = 'shutdown' if not opt else 'shutdown %s' % str(opt)  # shutdown or shutdown /h
             self.util.subprocess_call(cmd)
-
-    def parse_args(self):
-        """ Parse input arguments if script should be calling with input args.
-            Usage:
-                <Code>
-                    ...
-                    args = []
-                    args.append({   'name': arg_name, 
-                                    'default': default_value, 
-                                    'type': arg_type, 
-                                    'values': list_of_possible_values,
-                                    'help': 'help string'})
-                    parsed_args = scr.parse_args(args)
-                    ...
-                </Code>
-                'name' is the only mandatory field, others are optional.
-        """
-        if not self.args:
-            return {}
-
-        parser = argparse.ArgumentParser(description='Scrpt', formatter_class=argparse.RawTextHelpFormatter)
-        self.args = self.make_list(self.args)
-        # if not type(args2parse) is dict:
-        #     self.log.fatal('Wrong args2parse structure: %s. Should be defined as dict!!!' % str(args2parse))
-
-        # add args to be parsed
-        for arg in self.args:
-            if not type(arg) is dict:
-                self.log.fatal('Wrong args2parse structure: %s. Should be defined as dict!!!' % str(arg))
-
-            if 'name' in arg.keys():
-                arg_name = arg['name']
-            else:
-                self.log.fatal('Wrong arg structure: %s (mandatory field \'name\' is absent)!!!' % str(arg))
-
-            arg_help = arg['help'] if 'help' in arg.keys() else ''
-            arg_type = arg['type'] if 'type' in arg.keys() else str
-
-            if 'default' in arg.keys():
-                parser.add_argument('--%s' % arg_name, type=arg_type, help=arg_help, default=arg['default'])
-            else:
-                parser.add_argument('%s' % arg_name, type=arg_type, help=arg_help)
-
-        args = parser.parse_args()
-        args = vars(args)
-
-        self.log.info([(key, args[key], type(args[key])) for key in args.keys()])
-
-        # check input arg values if possible values were defined
-        for arg in self.args:
-            arg_values = self.make_list(arg['values']) if 'values' in arg.keys() else None
-            if arg_values is not None:
-                for item in arg_values:
-                    if args[arg['name']] == str(item):
-                        break
-                else:
-                    self.log.fatal('Wrong input arg value: %s. Possible values are: %s' % (args[arg['name']], arg_values))
-
-        return args
 
     def get_methods(self):
         """Create dict: {class method name: class method handle}"""

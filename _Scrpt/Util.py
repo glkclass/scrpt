@@ -4,7 +4,6 @@ import os
 import sys
 import re
 import subprocess
-import logging
 import socket
 
 from Scrpt_base import Scrpt_base
@@ -31,17 +30,10 @@ class Util(Scrpt_base):
                             'platform': platform
                         }
 
-    def __init__(self, log=None, user_settings=None):
+    def __init__(self, log, user_settings=None):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
-
-        if log:
-            self.log = log  # use external logger if exists
-        else:
-            # create own Logger
-            logging.setLoggerClass(Log.Log)
-            self.log = logging.getLogger(__name__)
-
+        self.log = log  # logger should be define outside
         self.path = Path(self.log, self.cfg)
         self.file = File(self.log, self.cfg)
         self.rmt = Rmt(self.log, self.file, self.cfg)
