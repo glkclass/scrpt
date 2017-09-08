@@ -107,8 +107,11 @@ class Util(Scrpt_base):
                 self.log.close()
                 subprocess.call(cmd, shell=shl)
             else:
-                # subprocess.call(cmd, shell=shl, stdout=sys.stdout, stderr=sys.stderr)
-                subprocess.call(cmd, shell=shl, stdout=sys.stderr)
+                foo = subprocess.check_output(cmd, shell=shl, stderr=subprocess.STDOUT, universal_newlines=True)
+                foo = foo.split('\n')
+                for item in foo:
+                    self.log.stdout(item)
+                return foo
 
     def environ(self, name_value, verbosity=40):
         """ Set/read environment variable.

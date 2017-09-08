@@ -48,7 +48,7 @@ class Rmt(Scrpt_base):
         self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
         with fabric.api.cd(path):
             # self.log.info(cmd)
-            fabric.api.run(cmd, stderr=sys.stdout)
+            return fabric.api.run(cmd, stderr=sys.stdout).split('\n')
 
     def upload(self, localpath, remotepath, verbosity=20):
         """Upload <single file/group of files> to remote host via sftp"""

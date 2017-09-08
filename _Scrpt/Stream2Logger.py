@@ -14,7 +14,7 @@ class Stream2Logger(object):
         for line in buf.splitlines():
             self.buf += line
             if buf.endswith('\n'):
-                self.logger.std(self.stdtype, self.log_level, self.buf)
+                self.logger.stdout(self.stdtype, self.log_level, self.buf)
                 self.buf = ''
 
     def flush(self):

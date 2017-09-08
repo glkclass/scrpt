@@ -17,6 +17,7 @@ class Path(Scrpt_base):
                         'isfile': 'There is no such file: \'%s\'!',
                         'isdir': 'There is no such folder: \'%s\'!',
                         'exists': 'There is no such path: \'%s\'!',
+                        
                         'mkdir':    {
                                         'file_exists': 'The folder: \'%s\' wasn\'t created due to existing file of same name!',
                                         'folder_exists': 'The folder: \'%s\' already exists.',
@@ -24,9 +25,14 @@ class Path(Scrpt_base):
                                     },
 
                         'remove':   {
-                                        'item_exists': 'Removing %s ...',
-                                        'item_doesnt_exist': 'The folder \'%s\' doesn\'t exist!',
+                                        'item_exists': 'Removing %s ...'
                                     },
+
+
+                        'move':     {
+                                        'item_exists': 'Moving %s to %s...'
+                                    },
+
                         'copy_dir_content': {
                                                 'src_folder_exists': 'Copying folder content \'%s\' -> \'%s\' ...',
                                                 'src_item_exists': 'Copying folder item \'%s\' -> \'%s\' ...',
@@ -95,6 +101,14 @@ class Path(Scrpt_base):
                     os.remove(path)
                 elif self.isdir(path):
                     shutil.rmtree(path)
+
+    def move(self, src, dst, verbosity=20):
+        path_list = self.make_list(src)
+        for path in path_list:
+            self.log.log(verbosity, self.log_message['move']['item_exists'] % (src, dst))
+            if self.exists(src):
+                os.chmod(src, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                shutil.move(src, dst)
 
     def copy_dir_content(self, src, dst, items=None, verbosity=20):
         if not self.isdir(src, verbosity):

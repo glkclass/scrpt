@@ -1,6 +1,5 @@
 import os
 import sys
-import argparse
 import inspect
 import types
 from Scrpt_base import Scrpt_base
@@ -44,17 +43,15 @@ class Scrpt(Scrpt_base):
 
     def run(self):
         self.args._parse()
-
         self.log.info('Python : %s' % sys.version)
         self.log.info('Host : %s' % self.util.get_hostname())
-
         self.log.job('started', 'SCRPT')
-        self.main()
+        ret = self.main()
         self.log.job('finished', 'SCRPT')
         self.log.info('SCRPT fnshd.')
         self.log.close()
         self.pc_shutdown('/h')
-        return
+        return ret
 
     def init_pc_shtdwn(self, mins):
         """Set large "PC sleep delay" when long term job scheduled with "PC shutdown" at the finish."""

@@ -20,31 +20,35 @@ class Plt(Scrpt_base):
 
     def proxy(self, func, *args, **kwargs):
         """Proxy to call matplotlib.pyplot methods. Plus some custom functionality"""
-        getattr(plt, func)(*args, **kwargs)
+        return getattr(plt, func)(*args, **kwargs)
 
-    def figure_setup(self, **kwargs):
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+    def add_subplot(self, fig, layout=111, **kwargs):
+        if 'facecolor' in kwargs.keys():
+            subplot = fig.add_subplot(layout, facecolor=kwargs['facecolor'])
+        else:
+            subplot = fig.add_subplot(layout)
 
         if 'x_grid' in kwargs.keys():
             x_grid = kwargs['x_grid']
             if 3 == len(x_grid):
-                ax.set_xticks(np.arange(x_grid[0], x_grid[1], x_grid[2]))
+                subplot.set_xticks(np.arange(x_grid[0], x_grid[1], x_grid[2]))
             elif 4 == len(x_grid):
-                ax.set_xticks(np.arange(x_grid[0], x_grid[1], x_grid[2]))
-                ax.set_xticks(np.arange(x_grid[0], x_grid[1], x_grid[3]), minor=True)
-
+                subplot.set_xticks(np.arange(x_grid[0], x_grid[1], x_grid[2]))
+                subplot.set_xticks(np.arange(x_grid[0], x_grid[1], x_grid[3]), minor=True)
         if 'y_grid' in kwargs.keys():
             y_grid = kwargs['y_grid']
             if 3 == len(y_grid):
-                ax.set_yticks(np.arange(y_grid[0], y_grid[1], y_grid[2]))
+                subplot.set_yticks(np.arange(y_grid[0], y_grid[1], y_grid[2]))
             elif 4 == len(y_grid):
-                ax.set_yticks(np.arange(y_grid[0], y_grid[1], y_grid[2]))
-                ax.set_yticks(np.arange(y_grid[0], y_grid[1], y_grid[3]), minor=True)
+                subplot.set_yticks(np.arange(y_grid[0], y_grid[1], y_grid[2]))
+                subplot.set_yticks(np.arange(y_grid[0], y_grid[1], y_grid[3]), minor=True)
+        subplot.grid(which='both')
+        subplot.grid(which='minor', alpha=0.2)
+        subplot.grid(which='major', alpha=0.5)
 
-        ax.grid(which='both')
-        ax.grid(which='minor', alpha=0.2)
-        ax.grid(which='major', alpha=0.5)
+        for item in ('title', 'xlabel', 'ylabel'):
+            if item in kwargs.keys():
+                self.proxy(item, kwargs[item])
 
     def plot_0(self, *args, **kwargs):
         plt.close('all')
@@ -60,12 +64,15 @@ class Plt(Scrpt_base):
         plt.axis('auto')
         plt.show(block=True)
 
-    def lpf(self, x, delta=3):
+    def lpf(self, x, window=3):
         y = []
         for i in range(len(x)):
-            if i >= delta:
-                foo = sum(x[i - delta:i]) / delta
+            if i >= window:
+                foo = sum(x[i + 1 - window:i + 1]) / len(x[i + 1 - window:i + 1])
                 y.append(foo)
+                # self.log.info('%f %f %d %d %d_' % (x[i], y[i], i, window, len(x[i - window:i])))
             else:
-                y.append(x[i])
+                foo = sum(x[0:i + 1]) / len(x[0:i + 1])
+                y.append(foo)
+                # self.log.info('%f %f %d %d %d' % (x[i], y[i], i, window, len(x[0:i + 1])))                
         return y

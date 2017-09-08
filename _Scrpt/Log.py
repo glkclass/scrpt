@@ -98,9 +98,14 @@ class Log(Logger, Scrpt_base):
         self.indent = indent_val if 0 == indent_val else self.indent + indent_val
         self.extra['indent'] = self.indent * '\t'
 
-    def std(self, stdtype, lvl, msg):
-        """Print messages from 'STDOUT/ERR'"""
-        self.set_formatter(stdtype)
+    def stdout(self, msg, lvl=INFO):
+        """Print pseudo stdout messages"""
+        self.set_formatter('stdout')
+        Logger.log(self, lvl, msg, extra=self.extra)
+
+    def stderr(self, msg, lvl=INFO):
+        """Print pseudo stderr messages"""
+        self.set_formatter('stderr')
         Logger.log(self, lvl, msg, extra=self.extra)
 
     def log(self, lvl, msg, *args, **kwargs):
@@ -185,7 +190,6 @@ class Log(Logger, Scrpt_base):
         """ current 'job' run time """
         job_dur = self.get_time()['now'] - self.job_time_stack['start'][job_name]
         return job_dur
-
 
     def job(self, mode='started', name='', lvl=INFO):
         """Print 'job' start/finish message"""
