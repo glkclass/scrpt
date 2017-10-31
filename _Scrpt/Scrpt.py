@@ -2,21 +2,23 @@ import os
 import sys
 import inspect
 import types
-from Scrpt_base import Scrpt_base
 import logging
-import Args
+import time
+from Scrpt_base import Scrpt_base
 import Log
 import Util
-import time
 
 
 class Scrpt(Scrpt_base):
-    """Class "Scrpt" - base class for all scripts. Contains stuff usefull for script developing/maintaining:
-    basic utils / logging&reporting / local&remote file access / etc"""
+    """Class "Scrpt" - base class for all scripts.
 
-    default_settings = {'shtdwn': False}
-    args = []
+    Contains stuff usefull for script developing/maintaining:
+    basic utils / logging&reporting / local&remote file access / etc
+    """
 
+    default_settings = {'shtdwn': False,
+                        'args': 'disable'}
+    
     def __init__(self, log=None, user_settings={}):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
@@ -30,30 +32,36 @@ class Scrpt(Scrpt_base):
             if str == type(log):
                 path2log = os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.log' if 'basename' == log else log
                 self.log.add_handler(path2log)
-                
-        self.args = Args.Args(self.log, self.cfg)
+
+        if 'enable' == self.cfg['args']:
+            from Args import Args
+            self.args = Args(self.log, self.cfg)
+
         self.util = Util.Util(self.log, self.cfg)  # create Util inst
         self.methods = self.get_methods()  # job list
         self.attr = self.get_attr()  # attr list
-        self.init_pc_shtdwn(5000)  # set PC 'sleep delay' if 'shutdowning'
+        self.init_pc_shutdown(5000)  # set PC 'sleep delay' if 'shutdowning'
 
-    def main(self):
-        self.job(self.args.job)
-        return 
+    def main(self, **kwargs):
+        if 'enable' == self.cfg['args'] and 'job' in self.args.__dict__.keys():  # 'parse input args' feature was enabled and 'job' passed in
+            return self.job(self.args.job, **kwargs)
+        else:
+            return self.job('', **kwargs)
 
-    def run(self):
-        self.args._parse()
+    def run(self, **kwargs):
+        if 'enable' == self.cfg['args']:
+            self.args._parse()
         self.log.info('Python : %s' % sys.version)
         self.log.info('Host : %s' % self.util.get_hostname())
         self.log.job('started', 'SCRPT')
-        ret = self.main()
+        ret = self.main(**kwargs)
         self.log.job('finished', 'SCRPT')
         self.log.info('SCRPT fnshd.')
         self.log.close()
         self.pc_shutdown('/h')
         return ret
 
-    def init_pc_shtdwn(self, mins):
+    def init_pc_shutdown(self, mins):
         """Set large "PC sleep delay" when long term job scheduled with "PC shutdown" at the finish."""
         if self.cfg['shtdwn']:
             self.util.pc_setup_sleep(mins)
@@ -83,7 +91,7 @@ class Scrpt(Scrpt_base):
             hier = scr_job.split('.')
             if 1 == len(hier):
                 if scr_job not in self.methods.keys():
-                    self.log.fatal('Unrecognized job: %s (...)' % scr_job)
+                    self.log.fatal('Unrecognized job: \'%s\'' % scr_job)
                 else:
                     job_name = scr_job
                     job_handle = self.methods[scr_job]
@@ -130,3 +138,9 @@ class Scrpt(Scrpt_base):
     def upload_scrpt_stuff(self, src_path, dst_path):
         # for item in ('__init__.py', 'File.py', 'Log.py','Stream2Logger.py', 'Path.py', 'Rmt.py', 'Scrpt.py', 'Scrpt_base.py', 'Util.py'):
         self.util.rmt.upload(os.path.join(src_path, '*.py'), dst_path)
+
+
+    def info(self, msg, *args, **kwargs):
+        """{Proxy for log.info"""
+        self.log.info(msg, *args, **kwargs)
+        

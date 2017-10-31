@@ -17,6 +17,12 @@ class Log(Logger, Scrpt_base):
     FATAL = logging.CRITICAL
     log_level = [DEBUG, INFO, WARNING, ERROR, FATAL]
 
+    # weekday = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+    # month = ('Dummy', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')
+
+    weekday = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+    month = ('Dummy', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
+
     msg_frmt =  {
                     'stdout':       '%(indent)s[SDO] : %(message)s',
                     'stderr':       '%(indent)s[SDR] : %(message)s',
@@ -57,26 +63,29 @@ class Log(Logger, Scrpt_base):
 
     def get_time(self):
         """ Get system date/time in different formats"""
-        weekday = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
-        month = ('Dummy', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')
-
         foo = {}
-
         now = datetime.datetime.now().replace(microsecond=0)
         foo['now'] = now
-
-        foo['month'] = month[foo['now'].month]
-        foo['week_num'] = foo['now'].weekday()
-        foo['week_day'] = weekday[foo['now'].weekday()]
+        foo['month'] = self.month[now.month]
+        foo['weekday'] = self.weekday[now.weekday()]
+        foo['weeknum'] = now.isocalendar()[1]
 
         foo['time'] = '%02d:%02d:%02d' % (now.hour, now.minute, now.second)
+        foo['time_wo_s'] = '%02d:%02d' % (now.hour, now.minute)
         foo['date'] = '%04d/%02d/%02d' % (now.year, now.month, now.day)
-        foo['date_time'] = '%04d/%02d/%02d  %02d:%02d:%02d' % (now.year, now.month, now.day, now.hour, now.minute, now.second)
-        foo['date_time_tag'] = '%04dy%02dm%02dd_%02dh%02dm%02ds' % (now.year, now.month, now.day, now.hour, now.minute, now.second)
-        foo['date_time_wo_year_tag'] = '%02dm%02dd_%02dh%02dm%02ds' % (now.month, now.day, now.hour, now.minute, now.second)
-        foo['date_time_wo_year_sec_tag'] = '%02dm%02dd_%02dh%02dm' % (now.month, now.day, now.hour, now.minute)
-
+        foo['dt'] = '%04d/%02d/%02d  %02d:%02d:%02d' % (now.year, now.month, now.day, now.hour, now.minute, now.second)
+        foo['dt_tag'] = '%04dy%02dm%02dd_%02dh%02dm%02ds' % (now.year, now.month, now.day, now.hour, now.minute, now.second)
+        foo['dt_wo_y_tag'] = '%02dm%02dd_%02dh%02dm%02ds' % (now.month, now.day, now.hour, now.minute, now.second)
+        foo['dt_wo_ys_tag'] = '%02dm%02dd_%02dh%02dm' % (now.month, now.day, now.hour, now.minute)
         return foo
+
+    def get_week(self, date):
+        """Get week day and week number from the start of the year"""
+        ymd = [int(item) for item in date.split('/')]
+        return  {
+                    'num': datetime.date(ymd[0], ymd[1], ymd[2]).isocalendar()[1],
+                    'day': self.weekday[datetime.date(ymd[0], ymd[1], ymd[2]).weekday()]
+                }
 
 
     def add_handler(self, path2log):

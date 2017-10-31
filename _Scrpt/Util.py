@@ -8,10 +8,8 @@ import socket
 
 from Scrpt_base import Scrpt_base
 from Log import Log
-from Rmt import Rmt
 from Path import Path
 from File import File
-from Plt import Plt
 
 
 class Util(Scrpt_base):
@@ -27,7 +25,9 @@ class Util(Scrpt_base):
     default_settings =  {
                             'print_cmd': False,
                             'shtdwn': False,
-                            'platform': platform
+                            'platform': platform,
+                            'rmt': 'disable',
+                            'plt': 'disable'
                         }
 
     def __init__(self, log, user_settings=None):
@@ -36,8 +36,14 @@ class Util(Scrpt_base):
         self.log = log  # logger should be define outside
         self.path = Path(self.log, self.cfg)
         self.file = File(self.log, self.cfg)
-        self.rmt = Rmt(self.log, self.file, self.cfg)
-        self.plt = Plt(self.log, self.cfg)
+        
+        if 'enable' == self.cfg['rmt']:
+            from Rmt import Rmt
+            self.rmt = Rmt(self.log, self.file, self.cfg)
+
+        if 'enable' == self.cfg['plt']:
+            from Plt import Plt
+            self.plt = Plt(self.log, self.cfg)
 
     def get_hostip(self):
         return socket.gethostbyname(self.get_hostname())
@@ -176,7 +182,7 @@ class Util(Scrpt_base):
             elif 'right' == allign:
                 return foo * ' ' + text
             elif 'center':
-                return (foo / 2) * alligner + text + ((foo / 2) + (foo % 2)) * alligner
+                return int(foo / 2) * alligner + text + (int(foo / 2) + (foo % 2)) * alligner
             else:
                 self.log.error('Wrong \'allign\' value')
                 return 'Wrong \'allign\' value'

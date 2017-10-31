@@ -1,6 +1,0 @@
-
-1. Add config with settings: holidays/weekends, history size, ...
-2. Add week arrange idents, holidays/weekends support
-3. Modify toto table: add total column
-3. Add todo_today table update: add pom, mov pom to toatl, finilize task
-

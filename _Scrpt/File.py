@@ -29,14 +29,15 @@ class File(Scrpt_base):
         self.log = log  # logger should be define outside
         self.path = Path(self.log, self.cfg)
 
-    def load(self, path2file, format='txt', strip=None, verbosity=20):
+    def load(self, path2file, format='txt', rstrip=None, verbosity=20):
         loader = {'json': json.load, 'yaml': yaml.load}
         if not self.path.isfile(path2file, verbosity):
             return None
         if 'txt' == format:
             with open(path2file, 'r') as txt:
                 lines = txt.readlines()
-            lines = [line.strip(strip) for line in lines]
+            if rstrip:
+                lines = [line.rstrip(rstrip) for line in lines]                
             txt.close()
             return lines
         elif 'xml' == format:
@@ -48,18 +49,18 @@ class File(Scrpt_base):
                 fid.close()
                 return foo
 
-    def save(self, data2store, path2file, format='txt', fo_mode='w', eol='\n', verbosity=20):
-        self.path.exists(path2file, verbosity)
+    def save(self, data2store, path2file, format='txt', fo_mode='w', eol=None, verbosity=20):
+        if self.path.exists(path2file, verbosity):
+            self.log.info('%s will be overwritten' % path2file)
         file_open_mode = {'w': 'w', 'a': 'a'}[fo_mode]
         fid = open(path2file, file_open_mode)
         if 'txt' == format:
-            if type(data2store) in (list, tuple):
-                for item in data2store:
-                    fid.write(str(item) + eol)
-            else:
-                fid.write(str(item) + eol)
+            data2store = self.make_list(data2store)
+            for item in data2store:
+                foo = str(item) + eol if eol else str(item)
+                fid.write(foo)
         elif 'json' == format:
-            json.dump(data2store, fid, sort_keys=True, indent=4)
+            json.dump(data2store, fid, sort_keys=True, indent=2)
         fid.flush()
         fid.close()
 

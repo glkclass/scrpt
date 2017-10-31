@@ -21,7 +21,7 @@ class Rmt(Scrpt_base):
     default_settings =  {
                             'platform': platform,
                             'environ': {'PATH2CRDNTL': 'SCRPT_CRDNTL'},
-                            'rmt': 'srv_34'
+                            'remote_host': 'srv_34'
                         }
 
     def __init__(self, log, file=None, user_settings=None):
@@ -45,14 +45,14 @@ class Rmt(Scrpt_base):
 
     def run(self, cmd, path='.'):
         """Login remote server via ssh and run cmd remotely"""
-        self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
+        self.fab_init(self.cfg['crdntl'][self.cfg['remote_host']])
         with fabric.api.cd(path):
             # self.log.info(cmd)
             return fabric.api.run(cmd, stderr=sys.stdout).split('\n')
 
     def upload(self, localpath, remotepath, verbosity=20):
         """Upload <single file/group of files> to remote host via sftp"""
-        self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
+        self.fab_init(self.cfg['crdntl'][self.cfg['remote_host']])
 
         localpath_list = self.make_list(localpath)
         ans = []
@@ -63,7 +63,7 @@ class Rmt(Scrpt_base):
 
     def download(self, remotepath='.', localpath='.', verbosity=20):
         """Download <single file/group of files> from remote host via sftp"""
-        self.fab_init(self.cfg['crdntl'][self.cfg['rmt']])
+        self.fab_init(self.cfg['crdntl'][self.cfg['remote_host']])
         remotepath_list = self.make_list(remotepath)
         ans = []
         for item in remotepath_list:
