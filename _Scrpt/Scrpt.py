@@ -17,8 +17,9 @@ class Scrpt(Scrpt_base):
     """
 
     default_settings = {'shtdwn': False,
-                        'args': 'disable'}
-    
+                        'args': 'disable',
+                        'platform': sys.platform}
+
     def __init__(self, log=None, user_settings={}):
         Scrpt_base.__init__(self, self.default_settings)
         self.update_settings(user_settings)
@@ -141,6 +142,9 @@ class Scrpt(Scrpt_base):
 
 
     def info(self, msg, *args, **kwargs):
-        """{Proxy for log.info"""
+        """Proxy for log.info"""
         self.log.info(msg, *args, **kwargs)
         
+    def error(self, msg, *args, **kwargs):
+        """Proxy for log.error"""
+        self.log.error(msg, *args, **kwargs)

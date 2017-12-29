@@ -1,4 +1,3 @@
-from sys import platform
 import os.path
 import os
 import sys
@@ -25,7 +24,6 @@ class Util(Scrpt_base):
     default_settings =  {
                             'print_cmd': False,
                             'shtdwn': False,
-                            'platform': platform,
                             'rmt': 'disable',
                             'plt': 'disable'
                         }
@@ -68,18 +66,8 @@ class Util(Scrpt_base):
 
         return found_patt
 
-    def line_wrap(self, line, prfx='<', sfx='>'):
-        return str(prfx) + str(line) + str(sfx)
-
-    def list_evaluate_diff(self, latter, former):
-        latter = set(latter)
-        former = set(former)
-        diff = {}
-        if latter - former:
-            diff['p'] = list(latter - former)
-        if former - latter:
-            diff['m'] = list(former - latter)
-        return diff
+    # def line_wrap(self, line, prfx='<', sfx='>'):
+    #     return str(prfx) + str(line) + str(sfx)
 
     def dict_create_key_hier(self, foo, keys, type='dict'):
         """Create following dictonary element: dict[keys_0][keys_1]...[keys_n-1] = {} or [].
@@ -163,7 +151,7 @@ class Util(Scrpt_base):
         return opts
 
     def get_opt(self, opt, opts, default=None):
-        return opts[opt] if opt in opts.keys() else default if default else None
+        return opts[opt] if opt in opts.keys() else default
 
     def pc_setup_sleep(self, mins):
         """Set up PC sleep time in minutes"""

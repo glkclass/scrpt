@@ -176,10 +176,12 @@ class Path(Scrpt_base):
         patt_list = self.make_list(pattern_2_find)
         dir_item_list = os.listdir(folder)
         for item in dir_item_list:
+            # self.log.info(item)
             for patt in patt_list:
                 foo = re.search(patt, item)
                 if foo:                
-                    path_item = os.path.join(folder, item)
+                    # path_item = os.path.join(folder, item)
+                    path_item = item
                     found_path.append(path_item)
                     parsed_path.append(foo)
                     break

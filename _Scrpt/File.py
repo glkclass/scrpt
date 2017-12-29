@@ -151,3 +151,14 @@ class File(Scrpt_base):
                     parsed_lines.append(foo)
                     break
         return found_lines, parsed_lines
+
+    def extract_info(self, folder, file_name_patt, info_line_patt):
+        """Parse txt files inside given folder and extract different info based on line patterns"""
+        files, _ = self.path.find_patt(folder, file_name_patt)
+        self.log.info('Found files: %s' % str(files))
+        foo = {}
+        for item in files:
+            file_ = os.path.join(folder, item)
+            _, bar = self.find_patt(file_, info_line_patt)
+            foo[item] = bar
+        return foo
