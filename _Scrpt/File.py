@@ -64,7 +64,7 @@ class File(Scrpt_base):
         fid.flush()
         fid.close()
 
-    def pack(self, path2src, dst_basename='', arch_name='zip', arch_h=None, verbosity=20):
+    def pack(self, path2src, dst_basename='', arch_name='zip', arch_h=None, ignore_items=[], verbosity=20):
         arch_name = str(arch_name)
         dst_filename = dst_basename + '.' + arch_name
         if not self.path.exists(path2src, verbosity):
@@ -84,12 +84,13 @@ class File(Scrpt_base):
 
         for item2pack in self.make_list(path2src):
             if self.path.isfile(item2pack, verbosity=20):
-                if 'zip' == arch_name:
-                    arch_h.write(item2pack)
-                elif arch_name in ('tar', 'tar.gz'):
-                    arch_h.add(item2pack)
+                if item2pack not in ignore_items:
+                    if 'zip' == arch_name:
+                        arch_h.write(item2pack)
+                    elif arch_name in ('tar', 'tar.gz'):
+                        arch_h.add(item2pack)
             elif self.path.isdir(item2pack, verbosity=20):
-                dir_items = os.listdir(item2pack)
+                dir_items = [item for item in os.listdir(item2pack) if item not in ignore_items]
                 for dir_item in dir_items:
                     dir_item2pack = os.path.join(item2pack, dir_item)
                     if self.path.isfile(dir_item2pack, verbosity=20):
