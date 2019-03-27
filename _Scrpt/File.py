@@ -1,165 +1,90 @@
-from sys import platform
-# import shutil
 import re
 import json
 import yaml
 import xml.etree.ElementTree
-import zipfile
-import tarfile
-import os
+import pickle
+import logging
 
-from Scrpt_base import Scrpt_base
-from Log import Log
-from Path import Path
+import path
+import util
 
 
-class File(Scrpt_base):
-    """Class 'File' - contains 'file/folder content process' utils: read, write, prase, pack/ etc.
-    To be embedded in others classes requiring such functionality"""
+"""Module 'file' - contains utils working with 'file content': read, write, parse..."""
 
-    log_message =   {
-                        'pack': 'Packing %s to %s ...',
-                        'unpack': 'Unpacking %s to %s ...',
-                    }
-    default_settings = {'print_cmd': False}
 
-    def __init__(self, log, user_settings=None):
-        Scrpt_base.__init__(self, self.default_settings)
-        self.update_settings(user_settings)
-        self.log = log  # logger should be define outside
-        self.path = Path(self.log, self.cfg)
+def load(path2file, format='txt'):
+    loader = {'json': {'loader': json.load, 'filemode': 'r'},
+              'yaml': {'loader': yaml.load, 'filemode': 'r'},
+              'pkl': {'loader': pickle.load, 'filemode': 'rb'}}
 
-    def load(self, path2file, format='txt', rstrip=None, verbosity=20):
-        loader = {'json': json.load, 'yaml': yaml.load}
-        if not self.path.isfile(path2file, verbosity):
-            return None
-        if 'txt' == format:
-            with open(path2file, 'r') as txt:
-                lines = txt.readlines()
-            if rstrip:
-                lines = [line.rstrip(rstrip) for line in lines]                
-            txt.close()
-            return lines
-        elif 'xml' == format:
-            with xml.etree.ElementTree.parse(path2file) as xml_root:
-                return xml_root.getroot()
-        elif format in loader.keys():
-            with open(path2file, 'r') as fid:
-                foo = loader[format](fid)
-                fid.close()
-                return foo
+    if not path.isfile(path2file):
+        return None
+    if 'txt' == format:
+        with open(path2file, 'r') as txt:
+            lines = txt.readlines()
+        return lines
+    elif 'xml' == format:
+        with xml.etree.ElementTree.parse(path2file) as xml_root:
+            return xml_root.getroot()
+    elif format in loader:
+        with open(path2file, loader[format]['filemode']) as fid:
+            foo = loader[format]['loader'](fid)
+            return foo
 
-    def save(self, data2store, path2file, format='txt', fo_mode='w', eol=None, verbosity=20):
-        if self.path.exists(path2file, verbosity):
-            self.log.info('%s will be overwritten' % path2file)
-        file_open_mode = {'w': 'w', 'a': 'a'}[fo_mode]
-        fid = open(path2file, file_open_mode)
-        if 'txt' == format:
-            data2store = self.make_list(data2store)
+
+def save(data2store, path2file, format='txt', append=False, **kwargs):
+    filemode = {True: 'a', False: 'w'}[append]
+    saver = {'json': {'saver': json.dump, 'filemode': filemode},
+             'pkl': {'saver': pickle.dump, 'filemode': filemode + 'b'}}
+
+    if path.exists(path2file):
+        logging.info('%s will be overwritten' % path2file)
+    if 'txt' == format:
+        data2store = util.make_list(data2store)
+        with open(path2file, filemode) as fid:
             for item in data2store:
-                foo = str(item) + eol if eol else str(item)
+                foo = str(item)
                 fid.write(foo)
-        elif 'json' == format:
-            json.dump(data2store, fid, sort_keys=True, indent=2)
-        fid.flush()
-        fid.close()
+    elif format in saver:
+        # json.dump(data2store, fid, sort_keys=True, indent=2)
+        # pickle.dump(lst, pickle_file, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(path2file, saver[format]['filemode']) as fid:
+            saver[format]['saver'](data2store, fid, **kwargs)
+    else:
+        logging.error('Unsupported format: %s!' % format)
 
-    def pack(self, path2src, dst_basename='', arch_name='zip', arch_h=None, ignore_items=[], verbosity=20):
-        arch_name = str(arch_name)
-        dst_filename = dst_basename + '.' + arch_name
-        if not self.path.exists(path2src, verbosity):
-            return None
-        if dst_basename:
-            self.log.info(self.log_message['pack'] % (path2src, dst_filename))
-        if self.cfg['print_cmd']:
-            return
 
-        if not arch_h:
-            if 'zip' == arch_name:
-                arch_h = zipfile.ZipFile(dst_filename, 'w')
-            elif 'tar' == arch_name:
-                arch_h = tarfile.open(dst_filename, "w")
-            elif 'tar.gz' == arch_name:
-                arch_h = tarfile.open(dst_filename, "w:gz")
+def remove_patt(path2txt, pattern2remove):
+    """Parse txt files: remove lines containing given re patterns"""
+    lines_in = load(path2txt, 'txt')
+    if not lines_in:
+        return
+    patt_list = util.make_list(pattern2remove)
+    lines_out = []
+    for line in lines_in:
+        for patt in patt_list:
+            foo = re.search(patt, line)
+            if foo:
+                break
+        else:
+            lines_out.append(line)
+    save(lines_out, path2txt, 'txt')
 
-        for item2pack in self.make_list(path2src):
-            if self.path.isfile(item2pack, verbosity=20):
-                if item2pack not in ignore_items:
-                    if 'zip' == arch_name:
-                        arch_h.write(item2pack)
-                    elif arch_name in ('tar', 'tar.gz'):
-                        arch_h.add(item2pack)
-            elif self.path.isdir(item2pack, verbosity=20):
-                dir_items = [item for item in os.listdir(item2pack) if item not in ignore_items]
-                for dir_item in dir_items:
-                    dir_item2pack = os.path.join(item2pack, dir_item)
-                    if self.path.isfile(dir_item2pack, verbosity=20):
-                        if 'zip' == arch_name:
-                            arch_h.write(dir_item2pack)
-                        elif arch_name in ('tar', 'tar.gz'):
-                            arch_h.add(dir_item2pack)
-                    elif self.path.isdir(dir_item2pack, verbosity=20):
-                        self.pack(dir_item2pack, arch_name=arch_name, arch_h=arch_h)
-        if dst_basename:
-            arch_h.close()
 
-    def unpack(self, path2archive, path2dst, arch_name='zip', arch_h=None, verbosity=20):
-        if not self.path.isfile(path2archive, 'unpack(...)', verbosity):
-            return None
-        log_message = self.log_message['unpack'] % (path2archive, path2dst)
-        self.log.info(log_message)
-        if self.cfg['print_cmd']:
-            return
+def find_patt(path2txt, pattern2find):
+    """Parse txt files: find lines containing given re patterns"""
+    lines = load(path2txt, 'txt')
+    if lines is None:
+        return None
 
-        if not arch_h:
-            if 'zip' == arch_name:
-                arch_h = zipfile.ZipFile(path2archive, 'r')
-            elif 'tar' == arch_name:
-                arch_h = tarfile.open(path2archive, "r")
-            elif 'tar.gz' == arch_name:
-                arch_h = tarfile.open(path2archive, "r:gz")
-        arch_h.extractall(path2dst)
-        arch_h.close()
-
-    def remove_patt(self, path_2_txt, pattern_2_remove, verbosity=20):
-        lines_in = self.load(path_2_txt, 'txt', verbosity=verbosity)
-        if not lines_in:
-            return
-        patt_list = self.make_list(pattern_2_remove)
-        lines_out = []
-        for line in lines_in:
-            for patt in patt_list:
-                foo = re.search(patt, line)
-                if foo:
-                    break
-            else:
-                lines_out.append(line)
-        self.save('txt', lines_out, path_2_txt)
-
-    def find_patt(self, path_2_txt, pattern_2_find, verbosity=20):
-        lines_in = self.load(path_2_txt, 'txt', verbosity=verbosity)
-        found_lines = []
-        parsed_lines = []
-        if not lines_in:
-            return found_lines, parsed_lines
-
-        patt_list = self.make_list(pattern_2_find)
-        for line in lines_in:
-            for patt in patt_list:
-                foo = re.search(patt, line)
-                if foo:
-                    found_lines.append(line)
-                    parsed_lines.append(foo)
-                    break
-        return found_lines, parsed_lines
-
-    def extract_info(self, folder, file_name_patt, info_line_patt):
-        """Parse txt files inside given folder and extract different info based on line patterns"""
-        files, _ = self.path.find_patt(folder, file_name_patt)
-        self.log.info('Found files: %s' % str(files))
-        foo = {}
-        for item in files:
-            file_ = os.path.join(folder, item)
-            _, bar = self.find_patt(file_, info_line_patt)
-            foo[item] = bar
-        return foo
+    pattern2find = util.make_list(pattern2find)
+    lines_out = {item: None for item in pattern2find}
+    for line in lines:
+        for patt in pattern2find:
+            foo = re.search(patt, line)
+            if foo:
+                if lines_out[patt] is not None:
+                    lines_out[patt].append(foo)
+                else:
+                    lines_out[patt] = [foo]
+    return lines_out
