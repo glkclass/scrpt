@@ -1,15 +1,16 @@
 #!/usr/bin python
-"""Remote host access service. Contains utils to work with remote host: upload/download/run commands"""
+"""Different util: timing, ..."""
 
 import os
 import socket
-import logging
 # import json
 # import numpy as np
 import datetime
 import time
 import subprocess
-host = socket.gethostname()
+import log_util
+
+log = log_util.get_logger(__name__)
 
 
 def allign_text(text, line_length, allign='center', alligner=' '):
@@ -25,18 +26,15 @@ def allign_text(text, line_length, allign='center', alligner=' '):
         elif 'center':
             return int(foo / 2) * alligner + text + (int(foo / 2) + (foo % 2)) * alligner
         else:
-            logging.error('Wrong \'allign\' value')
+            log.error('Wrong \'allign\' value')
             return 'Wrong \'allign\' value'
 
 
-
-def environ(name_value, verbosity=40):
+def environ(name_value):
     """ Set/read environment variable.
         Use cases:
-        environ('ENVAR_NAME=ENVAR_VALUE', verbosity=True)
         environ('ENVAR_NAME=ENVAR_VALUE')
-        environ('ENVAR_NAME)
-        environ('ENVAR_NAME', verbosity=True)
+        environ('ENVAR_NAME')
     """
     name_value = str(name_value)
     if '=' in name_value:  # setup env var
@@ -48,14 +46,14 @@ def environ(name_value, verbosity=40):
             os.environ[envar_name] = envar_value if envar_name not in os.environ.keys() else os.environ[envar_name] + os.pathsep + envar_value
         else:
             os.environ[envar_name] = envar_value
-        logging.info('Env variable: %s = %s' % (envar_name, os.environ[envar_name]))
+        log.info('Env variable: %s = %s' % (envar_name, os.environ[envar_name]))
     else:  # read env var
         envar_name = name_value
         if envar_name not in os.environ.keys():
-            logging.error('There is no such Env variable: %s !!!' % envar_name)
+            log.error('There is no such Env variable: %s !!!' % envar_name)
             return None
         else:
-            logging.info('Env variable: %s = %s' % (envar_name, os.environ[envar_name]))
+            log.info('Env variable: %s = %s' % (envar_name, os.environ[envar_name]))
 
     return os.environ[envar_name]
 
@@ -78,17 +76,17 @@ def subprocess_call(cmd, shl=True):
     """TODO: need to rethink/rewrite this util"""
     cmd_list = make_list(cmd)
     for cmd in cmd_list:
-        logging.info(cmd)
+        log.info(cmd)
         # if cfg['print_cmd']:
         #     continue
         if 'shutdown' in cmd:  # close log file if command='shutdown ...'
-            logging.shutdown()
+            log_util.shutdown()
             subprocess.call(cmd, shell=shl)
         else:
             foo = subprocess.check_output(cmd, shell=shl, stderr=subprocess.STDOUT, universal_newlines=True)
             foo = foo.split('\n')
             for item in foo:
-                logging.info(item)
+                log.info(item)
             return foo
 
 
@@ -238,9 +236,9 @@ def sleep(time2sleep=None):
         hours = time2sleep / 3600
         minutes = (time2sleep % 3600) / 60
         seconds = time2sleep % 60
-        logging.info('Sleeping for %02dh:%02dm:%02ds ...' % (hours, minutes, seconds))
+        log.info('Sleeping for %02dh:%02dm:%02ds ...' % (hours, minutes, seconds))
         time.sleep(time2sleep)
-        logging.info('Resuming ...' % (hours, minutes, seconds))
+        log.info('Resuming ...' % (hours, minutes, seconds))
     return time2sleep
 
 
@@ -250,7 +248,7 @@ def pc_setup_sleep(mins):
         cmd = 'powercfg -x standby-timeout-ac %s' % str(mins)
         subprocess_call(cmd)
     else:
-        logging.warning('Too short time for pc sleep interaval!!!')
+        log.error('Too short time for pc sleep interaval!!!')
 
 
 def pc_shutdown(opt=''):

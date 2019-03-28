@@ -3,10 +3,12 @@ import json
 import yaml
 import xml.etree.ElementTree
 import pickle
-import logging
 
 import path
 import util
+import log_util
+
+log = log_util.get_logger(__name__)
 
 
 """Module 'file' - contains utils working with 'file content': read, write, parse..."""
@@ -38,7 +40,7 @@ def save(data2store, path2file, format='txt', append=False, **kwargs):
              'pkl': {'saver': pickle.dump, 'filemode': filemode + 'b'}}
 
     if path.exists(path2file):
-        logging.info('%s will be overwritten' % path2file)
+        log.info('%s will be overwritten' % path2file)
     if 'txt' == format:
         data2store = util.make_list(data2store)
         with open(path2file, filemode) as fid:
@@ -51,7 +53,7 @@ def save(data2store, path2file, format='txt', append=False, **kwargs):
         with open(path2file, saver[format]['filemode']) as fid:
             saver[format]['saver'](data2store, fid, **kwargs)
     else:
-        logging.error('Unsupported format: %s!' % format)
+        log.error('Unsupported format: %s!' % format)
 
 
 def remove_patt(path2txt, pattern2remove):

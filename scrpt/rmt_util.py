@@ -1,10 +1,8 @@
 #!/usr/bin python
-"""Remote host access service. Contains utils to work with remote host: upload/download/run commands"""
+"""Remote host access util: upload/download/run commands"""
 import warnings
-import humanize
 import logging
 import urllib
-import os
 
 # supress these paramiko warnings
 warnings.filterwarnings("ignore", message=r"encode_point has been deprecated")

@@ -1,4 +1,3 @@
-from sys import platform
 import os.path
 import os
 import shutil
@@ -6,8 +5,10 @@ import stat
 import re
 import humanize
 # import subprocess
-import logging
 import util
+import log_util
+
+log = log_util.get_logger(__name__)
 
 
 def get_dir_content(dir):
@@ -39,7 +40,7 @@ def convert2lnx(path2convert):
 
 def isfile(path):
     if not os.path.isfile(path):
-        logging.info('There is no such file: \'%s\'!' % path)
+        log.info('There is no such file: \'%s\'!' % path)
         return False
     else:
         return True
@@ -47,7 +48,7 @@ def isfile(path):
 
 def isdir(path):
     if not os.path.isdir(path):
-        logging.info('There is no such folder: \'%s\'!' % path)
+        log.info('There is no such folder: \'%s\'!' % path)
         return False
     else:
         return True
@@ -55,7 +56,7 @@ def isdir(path):
 
 def exists(path):
     if not os.path.exists(path):
-        logging.info('There is no such path: \'%s\'!' % path)
+        log.info('There is no such path: \'%s\'!' % path)
         return False
     else:
         return True
@@ -66,9 +67,9 @@ def mkdir(path):
         os.makedirs(path)
     else:
         if os.path.isfile(path):
-            logging.error('Folder: \'%s\' wasn\'t created due to existing file of such name!' % path)
+            log.error('Folder: \'%s\' wasn\'t created due to existing file of such name!' % path)
         else:
-            logging.info('Folder: \'%s\' already exists.' % path)
+            log.info('Folder: \'%s\' already exists.' % path)
 
 
 def find_patt(dir, pattern='.*'):
@@ -88,7 +89,7 @@ def remove(path):
     """Remove items"""
     item2remove = util.make_list(path)
     for item in item2remove:
-        logging.log('Removing %s ...' % item)
+        log.log('Removing %s ...' % item)
         if exists(item):
             os.chmod(item, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
             if os.path.isfile(item):
@@ -96,20 +97,20 @@ def remove(path):
             elif isdir(item):
                 shutil.rmtree(item)
             else:
-                logging.error('Can\'t remove %s' % item)
+                log.error('Can\'t remove %s' % item)
 
 
 def copy(src_path, dst_path):
     """Copy firls & folders"""
     item2copy = util.make_list(src_path)
     for src_path in item2copy:
-        logging.info('Copying %s (%s) to %s' % (src_path, getsize(src_path), dst_path))
+        log.info('Copying %s (%s) to %s' % (src_path, getsize(src_path), dst_path))
         if os.ath.isfile(src_path):
             shutil.copy(src_path, dst_path)
         elif isdir(src_path):
             if not exists(dst_path):
                 shutil.copytree(src_path, dst_path)
             else:
-                logging.error('Destination folder path %s must not exist!' % dst_path)
+                log.error('Destination folder path %s must not exist!' % dst_path)
         else:
-            logging.error('Can\'t copy %s to %s' % (src_path, dst_path))
+            log.error('Can\'t copy %s to %s' % (src_path, dst_path))
