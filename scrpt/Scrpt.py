@@ -5,9 +5,9 @@ import types
 import log_util
 import util
 
+
 class Scrpt(object):
-    """Class "Scrpt" - base class for scripts.
-    """
+    """Class "Scrpt" - base class for scripts"""
 
     cfg = {'shtdwn': False}
 
@@ -70,3 +70,6 @@ class Scrpt(object):
     def upload_scrpt_stuff(self, scrpt_path, dst_path):
         foo = [os.path.join(scrpt_path, item) for item in os.listdir(scrpt_path) if item.endswith('.py')]
         self.util.rmt.upload(foo, dst_path)
+
+if __name__ == "__main__":
+    Scrpt().run()

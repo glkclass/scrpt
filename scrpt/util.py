@@ -3,8 +3,6 @@
 
 import os
 import socket
-# import json
-# import numpy as np
 import datetime
 import time
 import subprocess
@@ -123,54 +121,6 @@ def get_hostname():
 def make_list(item):
   return [item] if not isinstance(item, (list, tuple)) else item
 
-# class NumpyDecoder(json.JSONDecoder):
-#   """ Custom json decoder to convert 'list' to 'numpy.array' during json loading"""
-#   def decode(self, s):
-#     foo = json.JSONDecoder.decode(self, s)
-#     return np.asarray(foo) if isinstance(foo, list) else foo
-
-
-# class NumpyEncoder(json.JSONEncoder):
-#   """ Custom json encoder to convert 'numpy.array' to 'list'  during json storing"""
-#   def default(self, obj):
-#     if isinstance(obj, (np.ndarray,)):
-#       return obj.tolist()
-#     return json.JSONEncoder.default(self, obj)
-
-
-# def to_nparray(obj):
-#   """ Hook to convert 'list' to 'np.array' during json loading"""
-#   for key in obj:
-#     if isinstance(obj[key], list):
-#       obj[key] = np.asarray(obj[key])
-#   return obj
-
-
-# def save2json(foo, path2file=None):
-#   """ Store stuff to json. Converting 'numpy.array' to 'list'"""
-#   if path2file is not None:
-#     with open(path2file, 'w') as fid:
-#       json.dump(foo, fid, sort_keys=True, indent=2, cls=NumpyEncoder)
-#       return path2file
-#   else:
-#     return json.dumps(foo, sort_keys=True, indent=2, cls=NumpyEncoder)
-
-
-# def load4json(json_src, use_numpy=False, load4str=False):
-#   """ Load stuff from json.
-#     json_src - input json file os string
-#     use_numpy - whether to convert 'list' to 'numpy.array or no
-#     load4str - whether to load from json string or json file
-#   """
-#   try:
-#     if not load4str:
-#       with open(json_src, 'r') as fid:
-#         return json.load(fid, cls=NumpyDecoder, object_hook=to_nparray) if use_numpy else json.load(fid)
-#     else:
-#         return json.loads(json_src, cls=NumpyDecoder, object_hook=to_nparray) if use_numpy else json.loads(json_src)
-#   except ValueError as e:
-#     logging.error(e)
-#     return None
 
 def get_unique_time_pattern():
   """ Return string pattern corresponding to current time (including microseconds)"""
