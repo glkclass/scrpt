@@ -1,7 +1,6 @@
 #!/usr/bin python
 """Remote host access util: upload/download/run commands"""
 import warnings
-import logging
 import urllib
 
 # supress these paramiko warnings
@@ -12,9 +11,11 @@ warnings.filterwarnings("ignore", message=r"Support for unsafe construction of p
 # import sys
 from fabric import Connection
 import path
+import log_util
 
 cfg = None
 rmtc = None
+log = log_util.get_logger(__name__)
 
 
 def configure(cfg_):
@@ -35,7 +36,7 @@ def run(cmd):
   if cfg is not None:
     return rmtc.run(cmd)
   else:
-    logging.error('Unable to execute. \'rmt\' wasn\'t configured!!!')
+    log.error('Unable to execute. \'rmt\' wasn\'t configured!!!')
     return None
 
 
@@ -53,18 +54,18 @@ def upload(localpath, remotepath=''):
       remote_path_list = remote_path_list * len(local_path_list)
 
     if len(remote_path_list) != len(local_path_list):
-      logging.error('Unable to execute upload. Number of remote (destination) paths doesn\'t match to number of local (source) ones!!!\n%s\nvs\n%s' % (remote_path_list, local_path_list))
+      log.error('Unable to execute upload. Number of remote (destination) paths doesn\'t match to number of local (source) ones!!!\n%s\nvs\n%s' % (remote_path_list, local_path_list))
       return None
 
     uploaded = []
     for remote_item, local_item in zip(remote_path_list, local_path_list):
-      logging.info('%s will be uploaded to %s::/%s' % (path.getsize(local_item), cfg['host'], remote_item))
+      log.info('%s will be uploaded to %s::/%s' % (path.getsize(local_item), cfg['host'], remote_item))
       res = rmtc.put(local_item, remote_item)
-      logging.info('Uploaded %s to %s' % (res.local, res.remote))
+      log.info('Uploaded %s to %s' % (res.local, res.remote))
       uploaded.append(res.remote)
     return uploaded
   else:
-    logging.error('Unable to execute. \'rmt\' wasn\'t configured!!!')
+    log.error('Unable to execute. \'rmt\' wasn\'t configured!!!')
     return None
 
 
@@ -82,18 +83,18 @@ def download(remotepath, localpath=''):
       local_path_list = local_path_list * len(remote_path_list)
 
     if len(remote_path_list) != len(local_path_list):
-      logging.error('Unable to execute download. Number of local (destination) paths doesn\'t match to number of remote (source) ones!!!')
+      log.error('Unable to execute download. Number of local (destination) paths doesn\'t match to number of remote (source) ones!!!')
       return None
 
     downloaded = []
     for remote_item, local_item in zip(remote_path_list, local_path_list):
-      logging.info('%s will be downloaded from %s' % (remote_item, cfg['remote_host']))
+      log.info('%s will be downloaded from %s' % (remote_item, cfg['remote_host']))
       res = rmtc.get(remote_item, local_item)
-      logging.info('Downloaded %s to %s' % (res.remote, res.local))
+      log.info('Downloaded %s to %s' % (res.remote, res.local))
       downloaded.append(res.local)
     return downloaded
   else:
-    logging.error('Unable to execute. \'rmt\' wasn\'t configured!!!')
+    log.error('Unable to execute. \'rmt\' wasn\'t configured!!!')
     return None
 
 
