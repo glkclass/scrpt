@@ -2,7 +2,7 @@ import logging
 """Logging util"""
 
 # create formatter
-formatter = logging.Formatter('%(asctime)s %(levelname)s:%(name)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
+formatter = logging.Formatter('%(asctime)s %(levelname)s : %(name)s - %(message)s : %(filename)s, %(lineno)d', datefmt='%Y/%m/%d %H:%M:%S')
 loggers = {}
 
 

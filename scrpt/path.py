@@ -34,10 +34,6 @@ def getsize(path):
     # return subprocess.check_output(['du', '-sh', path]).split()[0].decode('utf-8')
 
 
-def convert2lnx(path2convert):
-    return path2convert.replace('\\', '/')
-
-
 def isfile(path):
     if not os.path.isfile(path):
         log.info('There is no such file: \'%s\'!' % path)
@@ -87,9 +83,9 @@ def find_patt(dir, pattern='.*'):
 
 def remove(path):
     """Remove items"""
-    item2remove = util.make_list(path)
+    item2remove = util.to_list(path)
     for item in item2remove:
-        log.log('Removing %s ...' % item)
+        log.info('Removing %s ...' % item)
         if exists(item):
             os.chmod(item, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
             if os.path.isfile(item):
@@ -101,11 +97,11 @@ def remove(path):
 
 
 def copy(src_path, dst_path):
-    """Copy firls & folders"""
-    item2copy = util.make_list(src_path)
+    """Copy files & folders"""
+    item2copy = util.to_list(src_path)
     for src_path in item2copy:
         log.info('Copying %s (%s) to %s' % (src_path, getsize(src_path), dst_path))
-        if os.ath.isfile(src_path):
+        if os.path.isfile(src_path):
             shutil.copy(src_path, dst_path)
         elif isdir(src_path):
             if not exists(dst_path):

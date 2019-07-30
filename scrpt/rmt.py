@@ -2,6 +2,7 @@
 """Remote host access util: upload/download/run commands"""
 import warnings
 import urllib
+import os
 
 # supress these paramiko warnings
 warnings.filterwarnings("ignore", message=r"encode_point has been deprecated")
@@ -89,7 +90,13 @@ def download(remotepath, localpath=''):
     downloaded = []
     for remote_item, local_item in zip(remote_path_list, local_path_list):
       log.info('%s will be downloaded from %s' % (remote_item, cfg['remote_host']))
-      res = rmtc.get(remote_item, local_item)
+      if os.path.isdir(local_item):  # fix fabric bug: add filename when local_path is folder
+        local_item = os.path.join(local_item, os.path.basename(remote_item))
+      try:
+        res = rmtc.get(remote_item, local_item)
+      except (IOError) as e:
+        log.error(e)
+        continue
       log.info('Downloaded %s to %s' % (res.remote, res.local))
       downloaded.append(res.local)
     return downloaded

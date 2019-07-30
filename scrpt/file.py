@@ -42,7 +42,7 @@ def save(data2store, path2file, format='txt', append=False, **kwargs):
     if path.exists(path2file):
         log.info('%s will be overwritten' % path2file)
     if 'txt' == format:
-        data2store = util.make_list(data2store)
+        data2store = util.to_list(data2store)
         with open(path2file, filemode) as fid:
             for item in data2store:
                 foo = str(item)
@@ -61,7 +61,7 @@ def remove_patt(path2txt, pattern2remove):
     lines_in = load(path2txt, 'txt')
     if not lines_in:
         return
-    patt_list = util.make_list(pattern2remove)
+    patt_list = util.to_list(pattern2remove)
     lines_out = []
     for line in lines_in:
         for patt in patt_list:
@@ -79,7 +79,7 @@ def find_patt(path2txt, pattern2find):
     if lines is None:
         return None
 
-    pattern2find = util.make_list(pattern2find)
+    pattern2find = util.to_list(pattern2find)
     lines_out = {item: None for item in pattern2find}
     for line in lines:
         for patt in pattern2find:

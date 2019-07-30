@@ -72,7 +72,7 @@ def parse_opt(opts, opt_line=''):
 
 def subprocess_call(cmd, shl=True):
     """TODO: need to rethink/rewrite this util"""
-    cmd_list = make_list(cmd)
+    cmd_list = to_list(cmd)
     for cmd in cmd_list:
         log.info(cmd)
         # if cfg['print_cmd']:
@@ -91,7 +91,7 @@ def subprocess_call(cmd, shl=True):
 def dict_create_key_hier(foo, keys, type='dict'):
     """Create following dictonary element: dict[keys_0][keys_1]...[keys_n-1] = {} or [].
     Type of created inner element (dict or list) is defined by 'type' parameter"""
-    keys = make_list(keys)
+    keys = to_list(keys)
     for key in keys[:-1]:
         if key not in foo.keys():
             foo[key] = {}
@@ -102,7 +102,7 @@ def dict_create_key_hier(foo, keys, type='dict'):
 
 def dict_has_key_hier(foo, keys):
     """Check whether dictonary has following element: dict[keys_0][keys_1]...[keys_n-1]"""
-    keys = make_list(keys)
+    keys = to_list(keys)
     for key in keys:
         if key in foo.keys():
             foo = foo[key]
@@ -118,15 +118,15 @@ def get_hostname():
     return socket.gethostname()
 
 
-def make_list(item):
-  return [item] if not isinstance(item, (list, tuple)) else item
+def to_list(item):
+    return [item] if not isinstance(item, (list, tuple)) else item
 
 
 def get_unique_time_pattern():
-  """ Return string pattern corresponding to current time (including microseconds)"""
-  now = datetime.datetime.now()
-  time_pattern = '%d_%02d_%02d_%02d_%02d_%02d_%06d' % (now.year, now.month, now.day, now.hour, now.minute, now.second, now.microsecond)
-  return time_pattern
+    """ Return string pattern corresponding to current time (including microseconds)"""
+    now = datetime.datetime.now()
+    time_pattern = '%d_%02d_%02d_%02d_%02d_%02d_%06d' % (now.year, now.month, now.day, now.hour, now.minute, now.second, now.microsecond)
+    return time_pattern
 
 
 # timing util
@@ -156,28 +156,28 @@ def get_time():
 def get_week(date):
     """Get week day and week number from the start of the year"""
     ymd = [int(item) for item in date.split('/')]
-    return  {
+    return{
                 'num': datetime.date(ymd[0], ymd[1], ymd[2]).isocalendar()[1],
                 'day': weekday[datetime.date(ymd[0], ymd[1], ymd[2]).weekday()]
-            }
+    }
 
 
 start_timestamp = get_time()['now']  # timestamp to be used by get_timedelta
 
 
 def get_timedelta(timestamp=None):
-  """ Measure time interval from start timestamp (should be set in advance)"""
-  timestamp = start_timestamp if not isinstance(timestamp, datetime.datetime) else timestamp
-  tme = datetime.datetime.now().replace(microsecond=0)
-  set_timestamp()
-  return tme - timestamp
+    """ Measure time interval from start timestamp (should be set in advance)"""
+    timestamp = start_timestamp if not isinstance(timestamp, datetime.datetime) else timestamp
+    tme = datetime.datetime.now().replace(microsecond=0)
+    set_timestamp()
+    return tme - timestamp
 
 
 def set_timestamp():
-  """ Set timestamp"""
-  global start_timestamp
-  start_timestamp = get_time()['now']
-  return start_timestamp
+    """ Set timestamp"""
+    global start_timestamp
+    start_timestamp = get_time()['now']
+    return start_timestamp
 
 
 def sleep(time2sleep=None):

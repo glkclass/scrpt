@@ -12,11 +12,8 @@ class Scrpt(object):
     cfg = {'shtdwn': False}
 
     def __init__(self, log_filename=None, settings={}):
-        for item in settings:
-            self.cfg[item] = settings[item]
-
+        self.cfg.update(settings)
         self.args = None  # parse input args if exist
-
         self.log = log_util.get_logger('scrpt', log_filename)  # create Logger
 
         # Set large "PC sleep delay" when long term job scheduled with "PC shutdown" at the finish
@@ -31,11 +28,11 @@ class Scrpt(object):
             return None
 
     def run(self, **kwargs):
-        self.log.info('Python : %s' % sys.version)
-        self.log.info('Host : %s' % util.get_hostname())
-        self.log.info('Job \'SCRPT\' started')
+        self.log.info('python : %s' % sys.version)
+        self.log.info('host : %s' % util.get_hostname())
+        self.log.info('scrpt started')
         ret = self.main(**kwargs)
-        self.log.info('Job \'SCRPT\' finished')
+        self.log.info('scrpt finished')
         log_util.shutdown()
         if self.cfg['shtdwn'] is True:
             util.pc_shutdown('/h')
@@ -59,12 +56,12 @@ class Scrpt(object):
             job_name = scr_job.__name__
             job_handle = scr_job
         else:
-            self.log.critical('Unrecognized job: %s' % scr_job)
+            self.log.critical('unrecognized job: %s !!!' % scr_job)
             return None
 
-        self.log.info('Job \'%s\' started' % job_name)
+        self.log.info('jJob \'%s\' started' % job_name)
         retval = job_handle(**kwargs)
-        self.log.info('Job \'%s\' finished' % job_name)
+        self.log.info('job \'%s\' finished' % job_name)
         return retval
 
     def upload_scrpt_stuff(self, scrpt_path, dst_path):
