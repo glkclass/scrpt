@@ -9,16 +9,34 @@ import util
 class Scrpt(object):
     """Class "Scrpt" - base class for scripts"""
 
-    cfg = {'shtdwn': False}
+    scrpt_settings = {'shtdwn': False}  # scrpt(system) settings
+    settings = {}  # user(project) settings
 
-    def __init__(self, log_filename=None, settings={}):
-        self.cfg.update(settings)
-        self.args = None  # parse input args if exist
+    def __init__(self, log_filename=None, scrpt_settings={}, settings={}):
+        """
+        log_filename -- To store log in file
+        scrpt_settings -- will override scrpt settings
+        settings -- will override user settingd
+        """
+
         self.log = log_util.get_logger('scrpt', log_filename)  # create Logger
+        self.update_settings(scrpt_settings, self.scrpt_settings)
+        self.update_settings(settings, self.settings)
+        self.args = None  # parse input args if exist
 
         # Set large "PC sleep delay" when long term job scheduled with "PC shutdown" at the finish
-        if self.cfg['shtdwn']:
+        if self.scrpt_settings['shtdwn']:
             util.pc_setup_sleep(6000)
+
+    def update_settings(self, src, dst):
+        """Update default settings"""
+        for item in src:
+            if not isinstance(src[item], dict):
+                dst[item] = src[item]
+            elif src[item]:
+                if item not in dst:
+                    dst[item] = {}
+                dst[item].update(src[item])
 
     def main(self, **kwargs):
         if getattr(self.args, 'job', None):  # check the job was defined in input args
@@ -34,7 +52,7 @@ class Scrpt(object):
         ret = self.main(**kwargs)
         self.log.info('scrpt finished')
         log_util.shutdown()
-        if self.cfg['shtdwn'] is True:
+        if self.scrpt_settings['shtdwn'] is True:
             util.pc_shutdown('/h')
         return ret
 
@@ -67,6 +85,7 @@ class Scrpt(object):
     def upload_scrpt_stuff(self, scrpt_path, dst_path):
         foo = [os.path.join(scrpt_path, item) for item in os.listdir(scrpt_path) if item.endswith('.py')]
         self.util.rmt.upload(foo, dst_path)
+
 
 if __name__ == "__main__":
     Scrpt().run()
