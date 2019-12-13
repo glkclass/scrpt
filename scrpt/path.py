@@ -1,4 +1,4 @@
-import os.path
+import os.path as osp
 import os
 import shutil
 import stat
@@ -18,11 +18,11 @@ def get_dir_content(dir):
     for root, subdirs, files in os.walk(dir):
         # print(root, subdirs)
         for filename in files:
-            item = os.path.join(root, filename)
+            item = osp.join(root, filename)
             if item not in total_files:
                 total_files.append(item)
         for subdir in subdirs:
-            item = os.path.join(root, subdir)
+            item = osp.join(root, subdir)
             if item not in total_subdirs:
                 total_subdirs.append(item)
     return total_files, total_subdirs
@@ -34,35 +34,11 @@ def getsize(path):
     # return subprocess.check_output(['du', '-sh', path]).split()[0].decode('utf-8')
 
 
-def isfile(path):
-    if not os.path.isfile(path):
-        log.info('There is no such file: \'%s\'!' % path)
-        return False
-    else:
-        return True
-
-
-def isdir(path):
-    if not os.path.isdir(path):
-        log.info('There is no such folder: \'%s\'!' % path)
-        return False
-    else:
-        return True
-
-
-def exists(path):
-    if not os.path.exists(path):
-        log.info('There is no such path: \'%s\'!' % path)
-        return False
-    else:
-        return True
-
-
 def mkdir(path):
-    if not os.path.exists(path):
+    if not osp.exists(path):
         os.makedirs(path)
     else:
-        if os.path.isfile(path):
+        if osp.isfile(path):
             log.error('Folder: \'%s\' wasn\'t created due to existing file of such name!' % path)
         else:
             log.info('Folder: \'%s\' already exists.' % path)
@@ -70,7 +46,7 @@ def mkdir(path):
 
 def find_patt(dir, pattern='.*'):
     """Find items inside folder matching given RE pattern"""
-    if not isdir(dir):
+    if not osp.isdir(dir):
         return None
     items_found = []
     dir_files, dir_subdirs = get_dir_content(dir)
@@ -86,11 +62,11 @@ def remove(path):
     item2remove = util.to_list(path)
     for item in item2remove:
         log.info('Removing %s ...' % item)
-        if exists(item):
+        if osp.exists(item):
             os.chmod(item, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-            if os.path.isfile(item):
+            if osp.isfile(item):
                 os.remove(item)
-            elif isdir(item):
+            elif osp.isdir(item):
                 shutil.rmtree(item)
             else:
                 log.error('Can\'t remove %s' % item)
@@ -101,10 +77,10 @@ def copy(src_path, dst_path):
     item2copy = util.to_list(src_path)
     for src_path in item2copy:
         log.info('Copying %s (%s) to %s' % (src_path, getsize(src_path), dst_path))
-        if os.path.isfile(src_path):
+        if osp.isfile(src_path):
             shutil.copy(src_path, dst_path)
-        elif isdir(src_path):
-            if not exists(dst_path):
+        elif osp.isdir(src_path):
+            if not osp.exists(dst_path):
                 shutil.copytree(src_path, dst_path)
             else:
                 log.error('Destination folder path %s must not exist!' % dst_path)

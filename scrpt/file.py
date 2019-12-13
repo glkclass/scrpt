@@ -1,10 +1,10 @@
+import os.path as osp
 import re
 import json
 import yaml
 import xml.etree.ElementTree
 import pickle
 
-import path
 import util
 import log_util
 
@@ -19,7 +19,7 @@ def load(path2file, format='txt'):
               'yaml': {'loader': yaml.load, 'filemode': 'r'},
               'pkl': {'loader': pickle.load, 'filemode': 'rb'}}
 
-    if not path.isfile(path2file):
+    if not osp.isfile(path2file):
         return None
     if 'txt' == format:
         with open(path2file, 'r') as txt:
@@ -39,7 +39,7 @@ def save(data2store, path2file, format='txt', append=False, **kwargs):
     saver = {'json': {'saver': json.dump, 'filemode': filemode},
              'pkl': {'saver': pickle.dump, 'filemode': filemode + 'b'}}
 
-    if path.exists(path2file):
+    if osp.exists(path2file):
         log.info('%s will be overwritten' % path2file)
     if 'txt' == format:
         data2store = util.to_list(data2store)

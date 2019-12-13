@@ -60,10 +60,11 @@ def upload(localpath, remotepath=''):
 
         uploaded = []
         for remote_item, local_item in zip(remote_path_list, local_path_list):
-            log.info('%s will be uploaded to %s::/%s' % (path.getsize(local_item), cfg['host'], remote_item))
-            res = rmtc.put(local_item, remote_item)
-            log.info('Uploaded %s to %s' % (res.local, res.remote))
-            uploaded.append(res.remote)
+            if path.isfile(local_item):
+                log.info('%s will be uploaded to %s::/%s' % (path.getsize(local_item), cfg['host'], remote_item))
+                res = rmtc.put(local_item, remote_item)
+                log.info('Uploaded %s to %s' % (res.local, res.remote))
+                uploaded.append(res.remote)
         return uploaded
     else:
         log.error('Unable to execute. \'rmt\' wasn\'t configured!!!')
