@@ -1,0 +1,76 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+# avv log highlight. Appropriate scopes should be defined in active color scheme.
+name: avv_log
+
+file_extensions:
+  - avv_log
+
+scope: source.log source.build_output
+
+variables:
+    txt: ".*"
+    sep: " \\: "
+    inf_tag: "\\[INF\\]{{sep}}"
+    war_tag: "\\[WAR\\]{{sep}}"
+    err_tag: "\\[ERR\\]{{sep}}"
+    ftl_tag: "\\[FTL\\]{{sep}}"
+    tme_tag: "\\[TME\\]{{sep}}"
+    job_tag: "\\[JOB\\]{{sep}}"
+    job_tme_tag: "{{sep}}\\[TME\\]{{sep}}"
+    dur_tag: "{{sep}}\\[DUR\\]{{sep}}"
+    xz_tag: "\\[{{txt}}\\]{{sep}}"
+
+contexts:
+  main:
+
+    - match: "^*({{inf_tag}}){{txt}}"
+      scope: message.info
+      captures:
+        1: message.tag
+
+    - match: "^*({{war_tag}}){{txt}}"
+      scope: message.warning
+      captures:
+        1: message.tag
+
+    - match: "^*({{err_tag}}){{txt}}"
+      scope: message.error
+      captures:
+        1: message.tag
+
+    - match: "^*({{ftl_tag}}){{txt}}"
+      scope: message.fatal
+      captures:
+        1: message.tag
+
+    - match: "^*({{tme_tag}}){{txt}}"
+      scope: message.time
+      captures:
+        1: message.tag
+
+    - match: "^*({{job_tag}})({{txt}})({{job_tme_tag}})({{txt}})({{dur_tag}})({{txt}})"
+      scope: message.job
+      captures:
+        1: message.tag
+        2: message.job
+        3: message.tag
+        4: message.time
+        5: message.tag
+        6: message.time
+
+    - match: "^*({{job_tag}})({{txt}})({{job_tme_tag}})({{txt}})"
+      scope: message.job
+      captures:
+        1: message.tag
+        2: message.job
+        3: message.tag
+        4: message.time
+
+    - match: "^*({{xz_tag}}){{txt}}"
+      scope: message.xz
+      captures:
+        1: message.tag
+
+
