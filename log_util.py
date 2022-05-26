@@ -49,18 +49,5 @@ def set_level(level, logger_name='root'):
 def shutdown():
     logging.shutdown()
 
-
-def logd(msg):
-    loggers['root'].debug(msg)
-
-def logi(msg):
-    loggers['root'].info(msg)
-
-def logw(msg):
-    loggers['root'].warning(msg)
-
-def logf(msg):
-    loggers['root'].critical(msg)
-
 get_logger(level='INFO')
 

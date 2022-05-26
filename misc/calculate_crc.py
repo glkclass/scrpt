@@ -1,5 +1,5 @@
 import sys
-sys.path.extend(['/home/anton/.config/sublime-text/Packages/Todo/scrpt', '/home/anton/design/ESCORT65/digital/design/tb'])
+sys.path.extend(['/home/anton/design/scrpt', '/home/anton/design/ESCORT65/digital/design/tb'])
 
 from functools import reduce
 
@@ -212,10 +212,11 @@ def conv_wordlist_2_bitstring(inp, word_width=8, dir=0):
 if __name__ == "__main__":
     poly_0x149F = 0x149F
     # number of 8-bit values should be divided by 3. To be converted to 12-bit values.
-    # data_arr = [0x45, 0x54, 0x89, 0x75, 0x34, 0x80, 0x26, 0x35, 0x73]
-    data_arr = [0x00] * 27
+    data_arr = [0xFF, 0xD0, 0x00, 0x08, 0xB5, 0x80]
+    # data_arr = [0x11] * 3
 
     data_bitstring = conv_wordlist_2_bitstring(data_arr, 8, 0)
+    print(data_bitstring)
 
     foo = calc_crc(data_bitstring, poly_0x149F, 0xFFF)
     log.debug(f'0x{foo:0x}')
